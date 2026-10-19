@@ -461,17 +461,9 @@ function HotelsPage() {
             </span>
           </button>
 
-          <button
-            className="sidebar-menu-item disabled"
-            disabled
-          >
-            <Icon
-              type="money"
-            />
-
-            <span>
-              Finanzas
-            </span>
+          <button className="sidebar-menu-item" onClick={() => navigate('/finanzas')}>
+            <Icon type="money" />
+            <span>Ventas y liquidaciones</span>
           </button>
 
           <button

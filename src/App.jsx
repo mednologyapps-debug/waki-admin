@@ -10,6 +10,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
+import FinancePage from './pages/FinancePage'
 import HotelsPage from './pages/HotelsPage'
 import NewHotelPage from './pages/NewHotelPage'
 import HotelLocationPage from './pages/HotelLocationPage'
@@ -21,6 +22,7 @@ import HotelDetailPage from './pages/HotelDetailPage'
 function App() {
   return (
     <Routes>
+      <Route path="/finanzas" element={<ProtectedRoute><FinancePage /></ProtectedRoute>} />
 
       <Route
         path="/hoteles/:hotelId/detalle"

@@ -241,12 +241,9 @@ function DashboardPage() {
             <span>Usuarios</span>
           </button>
 
-          <button
-            className="sidebar-menu-item disabled"
-            disabled
-          >
+          <button className="sidebar-menu-item" onClick={() => navigate('/finanzas')}>
             <Icon type="money" />
-            <span>Finanzas</span>
+            <span>Ventas y liquidaciones</span>
           </button>
 
           <button

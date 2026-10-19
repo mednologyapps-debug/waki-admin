@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 
 import wakiLogo from '../../assets/waki_logo_full.png'
@@ -114,6 +114,7 @@ function getInitials(name) {
 }
 
 function AdminSidebar() {
+  const { pathname } = useLocation()
   const navigate = useNavigate()
 
   const [adminName, setAdminName] = useState('Admin WAKI')
@@ -205,7 +206,7 @@ function AdminSidebar() {
 
         <button
           type="button"
-          className="active"
+          className={pathname.startsWith('/hoteles') ? 'active' : ''}
           onClick={() =>
             navigate('/hoteles')
           }
@@ -250,7 +251,8 @@ function AdminSidebar() {
 
         <button
           type="button"
-          disabled
+          className={pathname === '/finanzas' ? 'active' : ''}
+          onClick={() => navigate('/finanzas')}
         >
           <Icon
             type="finance"
@@ -258,7 +260,7 @@ function AdminSidebar() {
           />
 
           <span>
-            Finanzas
+            Ventas y liquidaciones
           </span>
         </button>
 
