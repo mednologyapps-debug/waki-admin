@@ -8,7 +8,7 @@ Ruta `/finanzas`, enlazada desde Dashboard, Hoteles y el menú compartido. Acces
 2. En **Ver detalle**, conciliar los ingresos contra los movimientos reales de la cuenta WAKI. Escribir referencia del cobro. Si la venta es histórica y no tenía una comisión guardada, seleccionar 4% u 8% según el porcentaje acordado.
 3. El neto conciliado se agrega al pendiente del hotel. El resumen excluye pruebas, pagos fallidos, otras monedas e incidencias. Las ampliaciones son operaciones separadas y se descuentan del total de la reserva base al importar el historial.
 4. Transferir el importe al hotel por el medio habitual y luego usar **Registrar depósito**. Solicita referencia, fecha y confirmación explícita. Registra todas las ventas pendientes del hotel dentro del periodo mostrado; no ejecuta una transferencia bancaria.
-5. Revisar **Últimos depósitos del hotel** (20 más recientes). La auditoría privada guarda administrador, fecha, cambios de comisión, conciliaciones e importe de cada depósito. La exportación CSV incluye solo los 25 hoteles de la página actual, como indica el botón.
+5. Revisar **Historial de pagos** (25 por página, con historial paginado). La auditoría privada guarda administrador, fecha, cambios de comisión, conciliaciones e importe de cada depósito. La exportación CSV incluye solo los 25 hoteles de la página actual, como indica el botón.
 
 El periodo filtra por fecha del cobro en `America/Lima`, con el último día incluido. “Ya depositado” corresponde a las ventas de ese periodo, aunque la transferencia se haya registrado en otra fecha. Sin filtro se obtiene el saldo histórico completo. El número de ventas cuenta operaciones conciliadas, incluidas ampliaciones.
 

@@ -1,788 +1,909 @@
-import { useEffect, useRef, useState } from "react";
-import AdminSidebar from "../components/admin/AdminSidebar";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { AdminPage, AdminDialog, Feedback } from "../components/admin/AdminUI";
 import { supabase } from "../lib/supabase";
 import {
-  exportFinance,
-  financeError,
-  limaDate,
   money,
-  statuses,
+  limaDate,
   todayLima,
+  financeError,
+  statuses,
+  exportFinance,
 } from "../lib/finance";
+import { createFinanceDemo, demoDetail, demoPayout } from "../lib/financeDemo";
+import {
+  payoutRequest,
+  downloadReceipt,
+  emailStates,
+} from "../lib/payoutClient";
 import "./FinancePage.css";
-
-function Dialog({ title, onClose, children, wide = false }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const dialog = ref.current;
-    dialog.showModal();
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      dialog.close();
-      document.body.style.overflow = previous;
-    };
-  }, []);
+const tabs = [
+  ["pending", "Pendientes de pago"],
+  ["paid", "Historial de pagos"],
+  ["review", "Por revisar"],
+  ["all", "Todos"],
+];
+function Metric({ label, value, hint }) {
   return (
-    <dialog
-      ref={ref}
-      className={`finance-dialog ${wide ? "finance-wide" : ""}`}
-      onCancel={(e) => {
-        e.preventDefault();
-        onClose();
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      aria-labelledby="finance-dialog-title"
-    >
-      <header>
-        <div>
-          <span className="finance-eyebrow">WAKI · FINANZAS</span>
-          <h2 id="finance-dialog-title">{title}</h2>
-        </div>
-        <button
-          type="button"
-          className="finance-close"
-          onClick={onClose}
-          aria-label="Cerrar"
-        >
-          ×
-        </button>
-      </header>
-      {children}
-    </dialog>
+    <article className="control-metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
+      {hint && <small>{hint}</small>}
+    </article>
   );
 }
-
 export default function FinancePage() {
-  const [filters, setFilters] = useState({
-    from: "",
-    to: "",
-    search: "",
-    status: "all",
-    page: 0,
+  const [filter, setFilter] = useState({
+      from: "",
+      to: "",
+      search: "",
+      status: "pending",
+      page: 0,
+    }),
+    [data, setData] = useState(null),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState(""),
+    [revision, setRevision] = useState(0),
+    [selected, setSelected] = useState(null),
+    [detail, setDetail] = useState(null),
+    [detailError, setDetailError] = useState(""),
+    [page, setPage] = useState(0),
+    [view, setView] = useState("sales"),
+    [action, setAction] = useState(null),
+    [busy, setBusy] = useState(false),
+    [notice, setNotice] = useState(""),
+    [mutationError, setMutationError] = useState(""),
+    [receipt, setReceipt] = useState(null);
+  const [demo, setDemo] = useState(() => {
+    try {
+      return (
+        JSON.parse(sessionStorage.getItem("waki-finance-demo-v1")) ||
+        createFinanceDemo()
+      );
+    } catch {
+      return createFinanceDemo();
+    }
   });
-  const [revision, setRevision] = useState(0);
-  const [data, setData] = useState(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(null);
-  const [settings, setSettings] = useState(null);
-  const [detail, setDetail] = useState(null);
-  const [detailPage, setDetailPage] = useState(0);
-  const [detailError, setDetailError] = useState("");
-  const [action, setAction] = useState(null);
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState("");
-  const [mutationError, setMutationError] = useState("");
   useEffect(() => {
     let cancelled = false;
     async function load() {
-      const { data: result, error: err } = await supabase.rpc(
+      const { data: r, error: e } = await supabase.rpc(
         "admin_finance_overview",
         {
-          p_from: filters.from || null,
-          p_to: filters.to || null,
-          p_search: filters.search,
-          p_status: filters.status,
-          p_page: filters.page,
+          p_from: filter.from || null,
+          p_to: filter.to || null,
+          p_search: filter.search,
+          p_status: filter.status,
+          p_page: filter.page,
         },
       );
-      if (cancelled) return;
-      setData(err ? null : result);
-      setError(err ? financeError(err) : "");
-      setLoading(false);
+      if (!cancelled) {
+        setData(e ? null : r);
+        setError(e ? financeError(e) : "");
+        setLoading(false);
+      }
     }
     load();
     return () => {
       cancelled = true;
     };
-  }, [filters, revision]);
+  }, [filter, revision]);
   useEffect(() => {
-    if (!selected) return;
+    if (!selected || selected.hotel_id === "demo-waki") return;
     let cancelled = false;
     async function load() {
-      const { data: result, error: err } = await supabase.rpc(
-        "admin_finance_detail",
-        {
-          p_hotel: selected.hotel_id,
-          p_from: filters.from || null,
-          p_to: filters.to || null,
-          p_page: detailPage,
-        },
-      );
-      if (cancelled) return;
-      setDetail(err ? null : result);
-      setDetailError(err ? financeError(err) : "");
+      const { data: r, error: e } = await supabase.rpc("admin_finance_detail", {
+        p_hotel: selected.hotel_id,
+        p_from: filter.from || null,
+        p_to: filter.to || null,
+        p_page: page,
+      });
+      if (!cancelled) {
+        setDetail(e ? null : r);
+        setDetailError(e ? financeError(e) : "");
+      }
     }
     load();
     return () => {
       cancelled = true;
     };
-  }, [selected, detailPage, filters.from, filters.to, revision]);
+  }, [selected, page, filter.from, filter.to, revision, view]);
+  const isDemo = selected?.hotel_id === "demo-waki",
+    d = isDemo ? demoDetail(demo, page) : detail;
+  const refresh = () => {
+    setLoading(true);
+    setRevision((v) => v + 1);
+  };
+  function open(row) {
+    setSelected(row);
+    setDetail(null);
+    setDetailError("");
+    setPage(0);
+    setView("sales");
+    setAction(null);
+    setReceipt(null);
+    setMutationError("");
+  }
+  function changeTab(status) {
+    setLoading(true);
+    setFilter((f) => ({ ...f, status, page: 0 }));
+  }
   function apply(e) {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.currentTarget));
     if (f.from && f.to && f.from > f.to) {
-      setError("La fecha inicial no puede ser posterior a la final.");
+      setError("Revisa el intervalo de fechas.");
       return;
     }
     setLoading(true);
-    setFilters({ ...f, page: 0 });
+    setFilter((current) => ({ ...current, ...f, page: 0 }));
   }
-  function refresh() {
-    setLoading(true);
-    setRevision((v) => v + 1);
-  }
-  function openHotel(row) {
-    setSelected(row);
-    setDetail(null);
-    setDetailPage(0);
-    setDetailError("");
-    setAction(null);
-    setMutationError("");
-  }
-  async function save(e, kind) {
+  async function save(e) {
     e.preventDefault();
     if (busy) return;
     const values = Object.fromEntries(new FormData(e.currentTarget));
-    const hotel = settings || selected;
-    const payload = { ...values, hotel_id: hotel.hotel_id };
-    if (kind === "reconcile") payload.sale_id = action.sale.id;
-    if (kind === "payout")
-      Object.assign(payload, {
-        token: detail.quote.token,
-        amount: detail.quote.amount,
-        from: filters.from,
-        to: filters.to,
-      });
     setBusy(true);
     setMutationError("");
     try {
-      const { error: err } = await supabase.rpc("admin_finance_action", {
-        p_action: kind,
-        p_data: payload,
-      });
-      if (err) throw err;
-      setNotice(
-        kind === "commission"
-          ? "Comisión guardada para futuros cobros."
-          : kind === "payout"
-            ? "Depósito registrado. Las ventas incluidas ya no están pendientes."
-            : "Cobro conciliado y agregado al saldo del hotel.",
-      );
+      if (isDemo) {
+        const next = demoPayout(demo, values);
+        setDemo(next);
+        sessionStorage.setItem("waki-finance-demo-v1", JSON.stringify(next));
+        setNotice(
+          "Simulación completada. El depósito se agregó al historial de demostración. No se envió dinero ni correo.",
+        );
+        setView("history");
+        setPage(0);
+      } else {
+        const payload = { ...values, hotel_id: selected.hotel_id };
+        if (action.kind === "payout")
+          Object.assign(payload, {
+            amount: d.quote.amount,
+            token: d.quote.token,
+            from: filter.from,
+            to: filter.to,
+          });
+        else payload.sale_id = action.sale.id;
+        const { data: r, error: e } = await supabase.rpc(
+          "admin_finance_action",
+          { p_action: action.kind, p_data: payload },
+        );
+        if (e) throw e;
+        if (action.kind === "payout") {
+          setNotice("Depósito registrado. Preparando el correo…");
+          try {
+            const mail = await payoutRequest("send", r.payout_id);
+            setNotice(
+              "Depósito registrado. " +
+                (emailStates[mail.email_status] ||
+                  "Revisa el estado del correo en el historial") +
+                ".",
+            );
+          } catch {
+            setNotice(
+              "Depósito registrado. No se pudo confirmar el envío del correo; revisa el historial antes de reintentar.",
+            );
+          }
+          setView("history");
+          setPage(0);
+        } else
+          setNotice("Cobro conciliado. Ya forma parte del saldo pendiente.");
+        setDetail(null);
+        refresh();
+      }
       setAction(null);
-      setSettings(null);
-      setDetail(null);
-      refresh();
     } catch (err) {
       setMutationError(financeError(err));
     } finally {
       setBusy(false);
     }
   }
-  const summary = data?.summary;
-  const closeDetail = () => {
-    if (!busy) {
-      setSelected(null);
-      setAction(null);
+  async function pdf(p) {
+    setBusy(true);
+    setMutationError("");
+    try {
+      await downloadReceipt(isDemo ? p : p.id);
+    } catch {
+      setMutationError("No se pudo descargar el PDF. Inténtalo nuevamente.");
+    } finally {
+      setBusy(false);
     }
+  }
+  async function showReceipt(p) {
+    setBusy(true);
+    setMutationError("");
+    try {
+      if (isDemo) setReceipt(p);
+      else {
+        const { data: r, error: e } = await supabase.rpc(
+          "admin_payout_receipt",
+          { p_id: p.id },
+        );
+        if (e) throw e;
+        setReceipt(r);
+      }
+    } catch {
+      setMutationError("No se pudo cargar el detalle del pago.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function resend(p) {
+    setBusy(true);
+    setMutationError("");
+    try {
+      const r = await payoutRequest("send", p.id);
+      setNotice(emailStates[r.email_status] || "Revisa el estado del correo.");
+      setDetail(null);
+      refresh();
+    } catch {
+      setMutationError(
+        "No se pudo confirmar el envío. Actualiza el historial.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+  const s = data?.summary;
+  const close = () => {
+    if (!busy) setSelected(null);
   };
   return (
-    <div className="hotel-setup-layout">
-      <AdminSidebar />
-      <main className="finance-main">
-        <header className="finance-header">
-          <div>
-            <span className="finance-eyebrow">CONTROL DE INGRESOS</span>
-            <h1>Ventas y liquidaciones</h1>
-            <p>Todo lo que WAKI cobra. Todo lo que tu hotel debe recibir.</p>
-          </div>
+    <AdminPage
+      title="Ventas y liquidaciones"
+      subtitle="Revisa qué hoteles faltan pagar y conserva cada depósito en su historial."
+      actions={
+        <>
+          <button className="control-btn" onClick={() => open(demo.hotel)}>
+            Ver hotel de demostración
+          </button>
           <button
-            className="finance-button"
-            onClick={refresh}
+            className="control-btn"
             disabled={loading || busy}
+            onClick={refresh}
           >
             Actualizar
           </button>
-        </header>
-        {notice && (
-          <div className="finance-notice" role="status">
-            {notice}
-            <button onClick={() => setNotice("")} aria-label="Ocultar mensaje">
-              ×
-            </button>
-          </div>
-        )}
-        <section className="finance-stats" aria-label="Resumen del periodo">
-          {[
-            [
-              "Cobrado y conciliado",
-              summary?.gross,
-              "Ventas verificadas, sin pruebas",
-            ],
-            [
-              "Comisión WAKI",
-              summary?.commission,
-              "Comisión histórica por operación",
-            ],
-            [
-              "Ya depositado",
-              summary?.deposited,
-              "De las ventas de este periodo",
-            ],
-            [
-              "Pendiente a hoteles",
-              summary?.pending,
-              "Saldo listo para liquidar",
-            ],
-          ].map(([label, value, hint], i) => (
-            <article className={i === 3 ? "finance-highlight" : ""} key={label}>
-              <span>{label}</span>
-              <strong>
-                {loading ? "…" : value == null ? "—" : money(value)}
-              </strong>
-              <small>{hint}</small>
-            </article>
-          ))}
-        </section>
-        <section className="finance-panel">
-          <div className="finance-panel-heading">
-            <div>
-              <h2>Liquidaciones por hotel</h2>
-              <p>
-                Cobrado − comisión WAKI − depósitos registrados = pendiente.
-              </p>
-            </div>
-            <button
-              className="finance-button"
-              disabled={loading || !data?.rows?.length}
-              onClick={() => exportFinance(data.rows)}
-            >
-              Exportar página CSV
-            </button>
-          </div>
-          <form className="finance-filters" onSubmit={apply}>
-            <label className="finance-search">
-              Buscar hotel
-              <input
-                name="search"
-                placeholder="Nombre o distrito"
-                maxLength={100}
-              />
-            </label>
-            <label>
-              Desde
-              <input type="date" name="from" />
-            </label>
-            <label>
-              Hasta
-              <input type="date" name="to" />
-            </label>
-            <label>
-              Mostrar
-              <select name="status">
-                <option value="all">Todos los hoteles</option>
-                <option value="pending">Con saldo pendiente</option>
-                <option value="review">Por conciliar / revisar</option>
-                <option value="paid">Con depósitos</option>
-                <option value="test">Con pruebas</option>
-              </select>
-            </label>
-            <button
-              className="finance-button finance-primary"
-              disabled={loading}
-            >
-              Aplicar filtros
-            </button>
-          </form>
-          <p className="finance-context">
-            {filters.from || filters.to
-              ? `Cobros del ${filters.from ? limaDate(filters.from) : "inicio"} al ${filters.to ? limaDate(filters.to) : "día de hoy"}`
-              : "Todos los cobros · saldo histórico acumulado"}{" "}
-            · Hora de Lima · PEN
-          </p>
-          {error ? (
-            <div role="alert" className="finance-error">
-              {error}
-              <button className="finance-button" onClick={refresh}>
-                Reintentar
-              </button>
-            </div>
-          ) : loading ? (
-            <div className="finance-empty" role="status">
-              Cargando liquidaciones…
-            </div>
-          ) : (
-            <>
-              <div className="finance-table-wrap">
-                <table className="finance-table">
-                  <thead>
-                    <tr>
-                      <th>Hotel</th>
-                      <th>Ventas</th>
-                      <th>Cobrado</th>
-                      <th>Comisión WAKI</th>
-                      <th>Depositado</th>
-                      <th>Por depositar</th>
-                      <th>
-                        <span className="finance-sr">Acciones</span>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data?.rows?.map((row) => (
-                      <tr key={row.hotel_id}>
-                        <td>
-                          <strong>{row.name}</strong>
-                          <small>{row.district || "Sin distrito"}</small>
-                          <div className="finance-flags">
-                            {row.review_count > 0 && (
-                              <span>{row.review_count} por conciliar</span>
-                            )}
-                            {row.held_count > 0 && (
-                              <span className="finance-held">
-                                {row.held_count} en revisión
-                              </span>
-                            )}
-                            {row.test_count > 0 && (
-                              <span className="finance-test">
-                                {row.test_count} pruebas
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          {row.sales_count}
-                          <small>conciliadas</small>
-                        </td>
-                        <td>{money(row.gross)}</td>
-                        <td>
-                          {money(row.commission)}
-                          <small>
-                            {row.min_rate == null
-                              ? "Sin ventas conciliadas"
-                              : row.min_rate === row.max_rate
-                                ? `${row.min_rate}% aplicado`
-                                : "Varias tasas aplicadas"}
-                          </small>
-                          <button
-                            className="finance-text-button"
-                            onClick={() => {
-                              setSettings(row);
-                              setMutationError("");
-                            }}
-                          >
-                            {row.commission_rate == null
-                              ? "Configurar comisión"
-                              : `Futuros cobros: ${row.commission_rate}%`}
-                          </button>
-                        </td>
-                        <td>{money(row.deposited)}</td>
-                        <td className="finance-amount">{money(row.pending)}</td>
-                        <td>
-                          <button
-                            className="finance-button"
-                            onClick={() => openHotel(row)}
-                          >
-                            Ver detalle
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {!data?.rows?.length && (
-                <div className="finance-empty">
-                  <h3>No hay hoteles con estos filtros</h3>
-                  <p>Cambia el periodo o el estado para ampliar tu búsqueda.</p>
-                </div>
-              )}
-              <div className="finance-pagination">
-                <span>
-                  {data?.total || 0} hoteles · Página {filters.page + 1}
-                </span>
-                <div>
-                  <button
-                    className="finance-button"
-                    disabled={filters.page === 0}
-                    onClick={() => {
-                      setLoading(true);
-                      setFilters((f) => ({ ...f, page: f.page - 1 }));
-                    }}
-                  >
-                    Anterior
-                  </button>
-                  <button
-                    className="finance-button"
-                    disabled={(filters.page + 1) * 25 >= (data?.total || 0)}
-                    onClick={() => {
-                      setLoading(true);
-                      setFilters((f) => ({ ...f, page: f.page + 1 }));
-                    }}
-                  >
-                    Siguiente
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-        </section>
-        <p className="finance-footnote">
-          Los pagos de prueba y los cobros por conciliar no suman al saldo
-          disponible. Las reservas canceladas o con incidencias quedan en
-          revisión. Las ampliaciones se registran como operaciones separadas.
-        </p>
-        {settings && (
-          <Dialog
-            title={`Comisión · ${settings.name}`}
-            onClose={() => {
-              if (!busy) setSettings(null);
-            }}
-          >
-            <form
-              className="finance-form"
-              onSubmit={(e) => save(e, "commission")}
-            >
-              <p>
-                Se aplicará a los próximos cobros. Las comisiones de ventas
-                anteriores conservarán su porcentaje.
-              </p>
-              <label>
-                Comisión WAKI (%)
-                <select
-                  name="rate"
-                  required
-                  defaultValue={settings.commission_rate ?? ""}
-                >
-                  <option value="" disabled>
-                    Selecciona una comisión
-                  </option>
-                  <option value="4">4%</option>
-                  <option value="8">8%</option>
-                </select>
-              </label>
-              <small>
-                Ejemplo: con 8%, por cada S/ 100 WAKI recibe S/ 8 y el hotel S/
-                92.
-              </small>
-              {mutationError && (
-                <p className="finance-error" role="alert">
-                  {mutationError}
-                </p>
-              )}
-              <button
-                className="finance-button finance-primary"
-                disabled={busy}
-              >
-                {busy ? "Guardando…" : "Guardar comisión"}
-              </button>
-            </form>
-          </Dialog>
-        )}
-        {selected && (
-          <Dialog wide title={selected.name} onClose={closeDetail}>
-            <p className="finance-context">
-              Mismo periodo de la tabla · Fechas de cobro en Lima
+        </>
+      }
+    >
+      <Feedback error={error} notice={notice} />
+      <div className="control-metrics">
+        <Metric
+          label="Pendiente de depositar"
+          value={loading ? "…" : money(s?.pending)}
+          hint="Ventas conciliadas aún sin liquidar"
+        />
+        <Metric
+          label="Ya depositado"
+          value={loading ? "…" : money(s?.deposited)}
+          hint="Historial del período seleccionado"
+        />
+        <Metric
+          label="Comisión WAKI"
+          value={loading ? "…" : money(s?.commission)}
+          hint="Se respeta la tasa de cada venta"
+        />
+        <Metric
+          label="Hoteles pendientes"
+          value={loading ? "…" : (data?.counts?.pending ?? "—")}
+          hint="Revisa esta lista al volver mañana"
+        />
+      </div>
+      <section className="control-card">
+        <div className="control-section-head">
+          <div>
+            <h2>Pagos a hoteles</h2>
+            <p>
+              Las nuevas ventas se suman a lo pendiente. Lo que ya pagaste
+              permanece en el historial.
             </p>
-            {detailError ? (
-              <p className="finance-error" role="alert">
-                {detailError}
-              </p>
-            ) : !detail ? (
-              <div className="finance-empty" role="status">
-                Cargando operaciones…
+          </div>
+          <button
+            className="control-btn"
+            disabled={!data?.rows?.length || loading}
+            onClick={() => exportFinance(data.rows)}
+          >
+            Exportar página
+          </button>
+        </div>
+        <div
+          className="payout-tabs"
+          role="group"
+          aria-label="Estado de liquidación"
+        >
+          {tabs.map(([id, label]) => (
+            <button
+              key={id}
+              className={filter.status === id ? "active" : ""}
+              aria-pressed={filter.status === id}
+              onClick={() => changeTab(id)}
+            >
+              {label}
+              <span>{data?.counts?.[id] ?? "—"}</span>
+            </button>
+          ))}
+        </div>
+        <form className="control-filters" onSubmit={apply}>
+          <input
+            name="search"
+            placeholder="Buscar hotel o distrito"
+            aria-label="Hotel o distrito"
+          />
+          <label>
+            Ventas desde
+            <input type="date" name="from" />
+          </label>
+          <label>
+            Hasta
+            <input type="date" name="to" />
+          </label>
+          <button className="control-btn primary">Filtrar</button>
+        </form>
+        <p className="payout-context">
+          {filter.from || filter.to
+            ? "Ventas del período seleccionado"
+            : "Todo el saldo acumulado, sin límite de fechas"}{" "}
+          · PEN · Lima
+        </p>
+        <div className="control-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Hotel</th>
+                <th>Comisión acordada</th>
+                <th>Pendiente de pago</th>
+                <th>Ya depositado</th>
+                <th>Último depósito</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {!loading &&
+                data?.rows?.map((h) => (
+                  <tr key={h.hotel_id}>
+                    <td>
+                      <strong>{h.name}</strong>
+                      <small>{h.district}</small>
+                      {h.review_count + h.held_count > 0 && (
+                        <span className="control-badge pending">
+                          {h.review_count + h.held_count} por revisar
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      {h.commission_rate == null ? (
+                        <Link to="/configuracion">Configurar comisión</Link>
+                      ) : (
+                        <>
+                          <strong>{h.commission_rate}%</strong>
+                          <small>Se conserva la tasa histórica</small>
+                        </>
+                      )}
+                    </td>
+                    <td>
+                      <strong className="payout-pending">
+                        {money(h.pending)}
+                      </strong>
+                      <small>{h.pending_count} operaciones pendientes</small>
+                    </td>
+                    <td>{money(h.deposited)}</td>
+                    <td>{limaDate(h.last_paid_on)}</td>
+                    <td>
+                      <button
+                        className={
+                          "control-btn " + (h.pending > 0 ? "primary" : "")
+                        }
+                        onClick={() => open(h)}
+                      >
+                        {h.pending > 0 ? "Revisar y pagar" : "Ver historial"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              {(loading || !data?.rows?.length) && (
+                <tr>
+                  <td colSpan="6" className="payout-empty">
+                    {loading
+                      ? "Cargando liquidaciones…"
+                      : filter.status === "pending"
+                        ? "No hay hoteles pendientes de pago con estos filtros."
+                        : "No hay hoteles con estos filtros."}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="control-pager">
+          <span>
+            {data?.total || 0} hoteles · Página {filter.page + 1}
+          </span>
+          <div>
+            <button
+              className="control-btn"
+              disabled={loading || !filter.page}
+              onClick={() => {
+                setLoading(true);
+                setFilter((f) => ({ ...f, page: f.page - 1 }));
+              }}
+            >
+              Anterior
+            </button>
+            <button
+              className="control-btn"
+              disabled={loading || (filter.page + 1) * 25 >= (data?.total || 0)}
+              onClick={() => {
+                setLoading(true);
+                setFilter((f) => ({ ...f, page: f.page + 1 }));
+              }}
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      </section>
+      <p className="payout-context">
+        Las pruebas, incidencias y cobros sin conciliar no se pagan. Confirmar
+        un depósito registra una transferencia que ya realizaste.
+      </p>
+      {selected && (
+        <AdminDialog title={selected.name} busy={busy} onClose={close}>
+          <div className="payout-detail">
+            <Feedback error={detailError || mutationError} notice={notice} />
+            {isDemo && (
+              <div className="payout-demo">
+                Hotel de demostración · Movimientos ficticios. Puedes simular el
+                depósito y descargar el PDF sin afectar dinero, hoteles ni
+                correos reales.
               </div>
+            )}
+            {!d ? (
+              <p>Cargando historial y saldo…</p>
             ) : (
               <>
-                <div className="finance-balance">
-                  <div>
-                    <span>Listo para depositar</span>
-                    <strong>{money(detail.quote.amount)}</strong>
-                    <small>{detail.quote.count} operaciones conciliadas</small>
-                  </div>
-                  <button
-                    className="finance-button finance-primary"
-                    disabled={
-                      busy || Number(detail.quote.amount) <= 0 || !!action
+                <div className="payout-summary">
+                  <Metric
+                    label={
+                      filter.from || filter.to
+                        ? "Pendiente del período"
+                        : "Pendiente de pago"
                     }
+                    value={money(d.quote.amount)}
+                    hint={d.quote.count + " operaciones listas para liquidar"}
+                  />
+                  <Metric
+                    label="Total ya depositado"
+                    value={money(d.summary.deposited)}
+                    hint={
+                      d.summary.payout_count + " depósitos · historial completo"
+                    }
+                  />
+                </div>
+                <div className="payout-recipient">
+                  <span>
+                    Comisión:{" "}
+                    <strong>
+                      {selected.commission_rate == null
+                        ? "Sin configurar"
+                        : selected.commission_rate + "%"}
+                    </strong>{" "}
+                    · Cada venta conserva su tasa.
+                  </span>
+                  <span>
+                    Resumen a:{" "}
+                    <strong>
+                      {d.summary.contact_email ||
+                        "Hotel sin correo de contacto"}
+                    </strong>
+                  </span>
+                </div>
+                <div
+                  className="payout-tabs"
+                  role="group"
+                  aria-label="Detalle del hotel"
+                >
+                  <button
+                    className={view === "sales" ? "active" : ""}
                     onClick={() => {
-                      setAction({ kind: "payout" });
-                      setMutationError("");
+                      if (view !== "sales") {
+                        setView("sales");
+                        setPage(0);
+                        setDetail(null);
+                        setReceipt(null);
+                      }
                     }}
                   >
-                    Registrar depósito
+                    Ventas y saldo
+                  </button>
+                  <button
+                    className={view === "history" ? "active" : ""}
+                    onClick={() => {
+                      if (view !== "history") {
+                        setView("history");
+                        setPage(0);
+                        setDetail(null);
+                      }
+                    }}
+                  >
+                    Historial de pagos <span>{d.summary.payout_count}</span>
                   </button>
                 </div>
+                {!action && (
+                  <div className="payout-paybar">
+                    <p>
+                      {d.quote.count
+                        ? `Puedes agrupar las ${d.quote.count} operaciones pendientes en un depósito.`
+                        : "Este hotel no tiene operaciones conciliadas pendientes en el período."}
+                    </p>
+                    <button
+                      className="control-btn primary"
+                      disabled={busy || d.quote.amount <= 0}
+                      onClick={() => {
+                        setAction({ kind: "payout" });
+                        setReceipt(null);
+                        setMutationError("");
+                      }}
+                    >
+                      {isDemo ? "Simular depósito" : "Confirmar depósito"}
+                    </button>
+                  </div>
+                )}
                 {action && (
-                  <form
-                    className="finance-form finance-action"
-                    onSubmit={(e) => save(e, action.kind)}
-                  >
+                  <form className="control-form payout-confirm" onSubmit={save}>
                     <h3>
                       {action.kind === "payout"
-                        ? "Registrar depósito realizado"
-                        : "Conciliar cobro recibido"}
+                        ? "Confirmar depósito de " + money(d.quote.amount)
+                        : "Conciliar cobro"}
                     </h3>
                     {action.kind === "payout" ? (
                       <>
                         <p>
-                          Registra una transferencia que ya realizaste a este
-                          hotel por{" "}
-                          <strong>{money(detail.quote.amount)}</strong>. Esto no
-                          envía dinero desde WAKI.
+                          Hotel: <strong>{selected.name}</strong>. Confirma solo
+                          después de realizar la transferencia. Se guardará el
+                          pago y se enviará el resumen PDF a{" "}
+                          <strong>
+                            {d.summary.contact_email ||
+                              "su correo de contacto (debes configurarlo)"}
+                          </strong>
+                          .
                         </p>
                         <label>
-                          Referencia de la transferencia
+                          Número de operación bancaria
                           <input
                             name="reference"
                             required
-                            minLength={3}
-                            maxLength={120}
-                            placeholder="Número de operación bancaria"
+                            minLength="3"
+                            maxLength="120"
                           />
                         </label>
                         <label>
-                          Fecha del depósito
+                          Fecha de depósito
                           <input
-                            name="paid_on"
                             type="date"
+                            name="paid_on"
                             required
                             max={todayLima()}
                             defaultValue={todayLima()}
                           />
                         </label>
                         <label>
-                          Notas (opcional)
-                          <textarea name="notes" maxLength={1000} rows={2} />
-                        </label>
-                        <label className="finance-check">
-                          <input type="checkbox" required />
-                          Confirmo que el hotel recibió este importe y revisé
-                          las operaciones incluidas.
+                          Notas opcionales
+                          <textarea name="notes" maxLength="1000" />
                         </label>
                       </>
                     ) : (
                       <>
                         <p>
-                          Confirma que WAKI recibió{" "}
-                          <strong>{money(action.sale.gross)}</strong> en su
-                          cuenta principal. Verifica el movimiento antes de
-                          continuar.
+                          Verifica el ingreso de{" "}
+                          <strong>{money(action.sale.gross)}</strong> a la
+                          cuenta de WAKI. Comisión aplicada:{" "}
+                          <strong>
+                            {action.sale.commission_rate ??
+                              selected.commission_rate}
+                            %
+                          </strong>
+                          .
                         </p>
+                        <input
+                          type="hidden"
+                          name="rate"
+                          value={
+                            action.sale.commission_rate ??
+                            selected.commission_rate ??
+                            ""
+                          }
+                        />
                         <label>
-                          Comisión aplicada (%)
-                          <select
-                            name="rate"
-                            required
-                            defaultValue={action.sale.commission_rate ?? ""}
-                          >
-                            <option value="" disabled>
-                              Selecciona una comisión
-                            </option>
-                            {action.sale.commission_rate != null ? (
-                              <option value={action.sale.commission_rate}>
-                                {action.sale.commission_rate}% · tasa histórica
-                              </option>
-                            ) : (
-                              <>
-                                <option value="4">4%</option>
-                                <option value="8">8%</option>
-                              </>
-                            )}
-                          </select>
-                        </label>
-                        <label>
-                          Referencia del cobro verificado
+                          Referencia del cobro recibido
                           <input
                             name="reference"
                             required
-                            minLength={3}
-                            maxLength={120}
+                            minLength="3"
+                            maxLength="120"
                           />
-                        </label>
-                        <label className="finance-check">
-                          <input type="checkbox" required />
-                          Verifiqué el ingreso real y la comisión acordada con
-                          el hotel.
                         </label>
                       </>
                     )}
-                    {mutationError && (
-                      <p className="finance-error" role="alert">
-                        {mutationError}
-                      </p>
-                    )}
-                    <div className="finance-inline-actions">
+                    <label className="control-check">
+                      <input type="checkbox" required />
+                      {isDemo
+                        ? "Entiendo que es una simulación."
+                        : "Revisé el hotel, las operaciones y el importe; confirmo el movimiento realizado."}
+                    </label>
+                    <div className="control-actions">
                       <button
+                        className="control-btn"
                         type="button"
-                        className="finance-button"
                         disabled={busy}
                         onClick={() => setAction(null)}
                       >
                         Cancelar
                       </button>
-                      <button
-                        className="finance-button finance-primary"
-                        disabled={busy}
-                      >
+                      <button className="control-btn primary" disabled={busy}>
                         {busy
                           ? "Guardando…"
                           : action.kind === "payout"
-                            ? "Confirmar registro del depósito"
+                            ? "Guardar depósito y enviar resumen"
                             : "Confirmar conciliación"}
                       </button>
                     </div>
                   </form>
                 )}
-                <h3>Detalle de operaciones</h3>
-                <div className="finance-table-wrap">
-                  <table className="finance-table">
-                    <thead>
-                      <tr>
-                        <th>Reserva / cobro</th>
-                        <th>Importe</th>
-                        <th>Comisión</th>
-                        <th>Neto hotel</th>
-                        <th>Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detail.rows.map((s) => (
-                        <tr key={s.id}>
-                          <td>
-                            <strong>{s.booking_code}</strong>
-                            <small>
-                              {s.source_kind === "extension"
-                                ? "Ampliación"
-                                : "Reserva"}{" "}
-                              · {limaDate(s.paid_at)}
-                            </small>
-                            <small>
-                              {s.provider || "Pasarela no registrada"}
-                            </small>
-                          </td>
-                          <td>
-                            {s.currency === "PEN"
-                              ? money(s.gross)
-                              : `${s.currency} ${s.gross}`}
-                          </td>
-                          <td>
-                            {s.commission_rate == null
-                              ? "Por definir"
-                              : `${s.currency === "PEN" ? money(s.commission) : s.currency + " " + s.commission} (${s.commission_rate}%)`}
-                          </td>
-                          <td>
-                            {s.net == null
-                              ? "—"
-                              : s.currency === "PEN"
-                                ? money(s.net)
-                                : `${s.currency} ${s.net}`}
-                          </td>
-                          <td>
-                            <span
-                              className={`finance-status finance-${s.finance_status}`}
-                            >
-                              {statuses[s.finance_status]}
-                            </span>
-                            {s.hold_reason && <small>{s.hold_reason}</small>}
-                            {s.payout_id && (
-                              <small>Depósito: {s.payout_id.slice(0, 8)}</small>
-                            )}
-                            {s.finance_status === "review" &&
-                              s.currency === "PEN" &&
-                              !s.verified_at && (
-                                <button
-                                  className="finance-text-button"
-                                  disabled={busy || !!action}
-                                  onClick={() => {
-                                    setAction({ kind: "reconcile", sale: s });
-                                    setMutationError("");
-                                  }}
+                {view === "sales" ? (
+                  <>
+                    <h3>Operaciones del período</h3>
+                    <div className="control-table-wrap">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Reserva / fecha</th>
+                            <th>Bruto</th>
+                            <th>Comisión</th>
+                            <th>Neto hotel</th>
+                            <th>Estado</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {d.rows.map((r) => (
+                            <tr key={r.id}>
+                              <td>
+                                <strong>{r.booking_code}</strong>
+                                <small>
+                                  {limaDate(r.paid_at)} ·{" "}
+                                  {r.source_kind === "extension"
+                                    ? "Ampliación"
+                                    : "Reserva"}
+                                </small>
+                              </td>
+                              <td>
+                                {r.currency} {Number(r.gross).toFixed(2)}
+                              </td>
+                              <td>
+                                {r.commission_rate == null
+                                  ? "Por revisar"
+                                  : money(r.commission) +
+                                    " · " +
+                                    r.commission_rate +
+                                    "%"}
+                              </td>
+                              <td>{r.net == null ? "—" : money(r.net)}</td>
+                              <td>
+                                <span
+                                  className={
+                                    "control-badge " +
+                                    (r.finance_status === "paid"
+                                      ? "active"
+                                      : "")
+                                  }
                                 >
-                                  Conciliar cobro
-                                </button>
-                              )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                {detail.rows.length === 0 && (
-                  <p className="finance-empty">Sin cobros en este periodo.</p>
+                                  {statuses[r.finance_status]}
+                                </span>
+                                {r.hold_reason && (
+                                  <small>{r.hold_reason}</small>
+                                )}
+                                {r.finance_status === "review" &&
+                                  r.currency === "PEN" &&
+                                  !r.verified_at && (
+                                    <button
+                                      className="finance-text-button"
+                                      disabled={
+                                        busy ||
+                                        !!action ||
+                                        selected.commission_rate == null
+                                      }
+                                      onClick={() =>
+                                        setAction({
+                                          kind: "reconcile",
+                                          sale: r,
+                                        })
+                                      }
+                                    >
+                                      Conciliar cobro
+                                    </button>
+                                  )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h3>Historial de depósitos</h3>
+                    <p className="payout-context">
+                      Cada depósito agrupa las ventas liquidadas en esa fecha.
+                      El historial incluye todos los períodos.
+                    </p>
+                    <div className="control-table-wrap">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Fecha / operación</th>
+                            <th>Depositado</th>
+                            <th>Resumen por correo</th>
+                            <th />
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {d.payouts.map((p) => (
+                            <tr key={p.id}>
+                              <td>
+                                <strong>{limaDate(p.paid_on)}</strong>
+                                <small>{p.reference}</small>
+                              </td>
+                              <td>
+                                <strong>{money(p.amount)}</strong>
+                              </td>
+                              <td>
+                                <span className="control-badge">
+                                  {emailStates[p.email_status] ||
+                                    "Sin envío registrado"}
+                                </span>
+                                {p.recipient && <small>{p.recipient}</small>}
+                                {p.email_status === "unknown" && (
+                                  <small>
+                                    Verifica el buzón antes de gestionar otro
+                                    envío.
+                                  </small>
+                                )}
+                                {!isDemo &&
+                                  [
+                                    "pending",
+                                    "failed",
+                                    "unconfigured",
+                                    "sending",
+                                  ].includes(p.email_status) && (
+                                    <button
+                                      className="finance-text-button"
+                                      disabled={busy}
+                                      onClick={() => resend(p)}
+                                    >
+                                      {p.email_status === "sending"
+                                        ? "Consultar envío"
+                                        : "Reintentar solo correo"}
+                                    </button>
+                                  )}
+                              </td>
+                              <td>
+                                <div className="control-actions">
+                                  <button
+                                    className="control-btn"
+                                    disabled={busy}
+                                    onClick={() => showReceipt(p)}
+                                  >
+                                    Ver resumen
+                                  </button>
+                                  <button
+                                    className="control-btn"
+                                    disabled={busy}
+                                    onClick={() => pdf(p)}
+                                  >
+                                    PDF
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                          {!d.payouts.length && (
+                            <tr>
+                              <td colSpan="4">
+                                Aún no hay depósitos registrados.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                    {receipt && (
+                      <section className="payout-receipt">
+                        <div className="control-section-head">
+                          <div>
+                            <h3>Resumen · {receipt.reference}</h3>
+                            <p>
+                              Depositado:{" "}
+                              <strong>{money(receipt.amount)}</strong> ·
+                              Comisión WAKI: {money(receipt.commission)}
+                            </p>
+                          </div>
+                          <button
+                            className="control-btn"
+                            onClick={() => setReceipt(null)}
+                          >
+                            Cerrar resumen
+                          </button>
+                        </div>
+                        <div className="control-table-wrap">
+                          <table>
+                            <thead>
+                              <tr>
+                                <th>Reserva</th>
+                                <th>Bruto</th>
+                                <th>Comisión</th>
+                                <th>Neto</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {receipt.items.map((r) => (
+                                <tr key={r.id}>
+                                  <td>{r.booking_code}</td>
+                                  <td>{money(r.gross)}</td>
+                                  <td>
+                                    {money(r.commission)} · {r.rate}%
+                                  </td>
+                                  <td>{money(r.net)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </section>
+                    )}
+                  </>
                 )}
-                <div className="finance-pagination">
+                <div className="control-pager">
                   <span>
-                    {detail.total} operaciones · Página {detailPage + 1}
+                    Página {page + 1} ·{" "}
+                    {view === "sales"
+                      ? d.total + " operaciones"
+                      : d.summary.payout_count + " depósitos"}
                   </span>
                   <div>
                     <button
-                      className="finance-button"
-                      disabled={busy || !!action || detailPage === 0}
+                      className="control-btn"
+                      disabled={busy || !!action || !page}
                       onClick={() => {
                         setDetail(null);
-                        setDetailPage((p) => p - 1);
+                        setReceipt(null);
+                        setPage((p) => p - 1);
                       }}
                     >
                       Anterior
                     </button>
                     <button
-                      className="finance-button"
+                      className="control-btn"
                       disabled={
                         busy ||
                         !!action ||
-                        (detailPage + 1) * 50 >= detail.total
+                        (page + 1) * (view === "sales" ? 50 : 25) >=
+                          (view === "sales" ? d.total : d.summary.payout_count)
                       }
                       onClick={() => {
                         setDetail(null);
-                        setDetailPage((p) => p + 1);
+                        setReceipt(null);
+                        setPage((p) => p + 1);
                       }}
                     >
                       Siguiente
                     </button>
                   </div>
                 </div>
-                <h3>Últimos depósitos del hotel</h3>
-                {detail.payouts.length ? (
-                  <div className="finance-table-wrap">
-                    <table className="finance-table">
-                      <thead>
-                        <tr>
-                          <th>Fecha</th>
-                          <th>Referencia</th>
-                          <th>Importe</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {detail.payouts.map((p) => (
-                          <tr key={p.id}>
-                            <td>
-                              {limaDate(p.paid_on)}
-                              <small>{p.id.slice(0, 8)}</small>
-                            </td>
-                            <td>
-                              {p.reference}
-                              {p.notes && <small>{p.notes}</small>}
-                            </td>
-                            <td>{money(p.amount)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="finance-empty">
-                    Aún no hay depósitos registrados.
-                  </p>
-                )}
               </>
             )}
-          </Dialog>
-        )}
-      </main>
-    </div>
+          </div>
+        </AdminDialog>
+      )}
+    </AdminPage>
   );
 }

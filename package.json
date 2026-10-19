@@ -9,11 +9,13 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test:finance": "node tests/finance.test.mjs",
-    "test:admin": "node tests/admin-control.test.mjs"
+    "test:admin": "node tests/admin-control.test.mjs",
+    "test:payout": "node tests/payout-document.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.114.0",
     "lucide-react": "0.468.0",
+    "pdf-lib": "1.17.1",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.3"

@@ -20,6 +20,7 @@ create table reservation_extensions(id uuid primary key,reservation_id uuid refe
 for (const name of [
   "20261019161140_hotel_settlements.sql",
   "20261019163022_admin_control_center.sql",
+  "20261019165421_payout_receipts.sql",
 ])
   await db.exec(
     await fs.readFile(
@@ -54,6 +55,9 @@ await db.query("insert into hotels values($1,$2,$3,$4)", [
   "Lima",
   "pending_review",
 ]);
+await db.exec(
+  "alter table public.hotels add contact_email text;update public.hotels set contact_email='hotel@example.test'",
+);
 const read = async (mode, filter = {}) =>
   (
     await db.query("select public.admin_control_read($1,$2) data", [
@@ -256,6 +260,128 @@ assert.equal(
   ).rows[0].allowed,
   false,
 );
+
+// A payout and its immutable receipt/outbox commit together.
+const ledger = (
+  await db.query(
+    "select id from waki_private.hotel_sales where reservation_id=$1",
+    [r.id],
+  )
+).rows[0];
+await db.query("select public.admin_finance_action($1,$2)", [
+  "reconcile",
+  JSON.stringify({
+    hotel_id: hotelId,
+    sale_id: ledger.id,
+    reference: "REAL-BANK-001",
+  }),
+]);
+const quote = (
+  await db.query("select public.admin_finance_detail($1) data", [hotelId])
+).rows[0].data.quote;
+const payout = (
+  await db.query("select public.admin_finance_action($1,$2) data", [
+    "payout",
+    JSON.stringify({
+      hotel_id: hotelId,
+      reference: "DEPOSIT-001",
+      paid_on: new Date().toISOString().slice(0, 10),
+      amount: quote.amount,
+      token: quote.token,
+    }),
+  ])
+).rows[0].data;
+const receipt = (
+  await db.query("select public.admin_payout_receipt($1) data", [
+    payout.payout_id,
+  ])
+).rows[0].data;
+assert.equal(receipt.amount, 92);
+assert.equal(receipt.items.length, 1);
+assert.equal(receipt.items[0].rate, 8);
+assert.equal(receipt.recipient, "hotel@example.test");
+await db.query(
+  "update public.hotels set contact_email='changed@example.test' where id=$1",
+  [hotelId],
+);
+assert.equal(
+  (
+    await db.query("select public.admin_payout_receipt($1) data", [
+      payout.payout_id,
+    ])
+  ).rows[0].data.recipient,
+  "hotel@example.test",
+);
+const paidDetail = (
+  await db.query("select public.admin_finance_detail($1) data", [hotelId])
+).rows[0].data;
+assert.equal(paidDetail.quote.amount, 0);
+assert.equal(paidDetail.summary.deposited, 92);
+assert.equal(paidDetail.payouts[0].email_status, "pending");
+assert.equal(
+  (
+    await db.query(
+      "select public.admin_finance_overview(p_status=>'pending') data",
+    )
+  ).rows[0].data.total,
+  0,
+);
+assert.equal(
+  (
+    await db.query(
+      "select public.admin_finance_overview(p_status=>'paid') data",
+    )
+  ).rows[0].data.total,
+  1,
+);
+const claim = (
+  await db.query("select public.admin_payout_delivery($1,'claim') data", [
+    payout.payout_id,
+  ])
+).rows[0].data;
+assert.equal(claim.ok, true);
+assert.equal(
+  (
+    await db.query("select public.admin_payout_delivery($1,'claim') data", [
+      payout.payout_id,
+    ])
+  ).rows[0].data.state,
+  "sending",
+);
+await assert.rejects(
+  db.query("select public.admin_payout_delivery($1,'finish',$2)", [
+    payout.payout_id,
+    JSON.stringify({ lease: id(999), state: "sent" }),
+  ]),
+  /INVALID_DELIVERY/,
+);
+await db.query("select public.admin_payout_delivery($1,'finish',$2)", [
+  payout.payout_id,
+  JSON.stringify({
+    lease: claim.lease,
+    state: "sent",
+    message_id: "provider-id",
+  }),
+]);
+assert.equal(
+  (
+    await db.query("select public.admin_payout_delivery($1,'claim') data", [
+      payout.payout_id,
+    ])
+  ).rows[0].data.state,
+  "sent",
+);
+await db.exec("set request.jwt.claim.role='authenticated'");
+await assert.rejects(
+  db.query("select public.admin_payout_delivery($1,'claim')", [
+    payout.payout_id,
+  ]),
+  /NOT_AUTHORIZED/,
+);
+console.log(
+  "Payout: frozen receipt, grouped payment, pending/paid filters, totals, transactional outbox and duplicate email claims verified.",
+);
+
 await db.close();
 console.log(
   "Admin: consultas, filtros, comisión 4/8, permisos, aprobaciones, asignaciones, concurrencia y estados de reservas verificados.",
