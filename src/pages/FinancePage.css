@@ -142,6 +142,7 @@
 .finance-main input,
 .finance-main select,
 .finance-main textarea,
+.finance-dialog select,
 .finance-dialog input,
 .finance-dialog textarea {
   border: 1px solid #ded9e6;
@@ -156,6 +157,7 @@
 }
 .finance-main input:focus-visible,
 .finance-main select:focus-visible,
+.finance-dialog select:focus-visible,
 .finance-dialog input:focus-visible,
 .finance-dialog textarea:focus-visible {
   outline: 2px solid #c9bbdf;

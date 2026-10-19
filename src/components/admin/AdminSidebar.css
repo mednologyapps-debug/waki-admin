@@ -1,0 +1,212 @@
+.admin-canonical-sidebar {
+  width: 250px;
+  height: 100dvh;
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: 100;
+  padding: 21px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: auto;
+  box-sizing: border-box;
+  background-color: #7355e8;
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: cover;
+  color: #fff;
+}
+.admin-canonical-brand {
+  height: 55px;
+  padding: 0 7px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-canonical-brand img {
+  width: 99px;
+  height: auto;
+}
+.admin-canonical-brand > span,
+.admin-mobile-bar > span {
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 7px;
+  padding: 6px 9px;
+  background: #ffffff2b;
+}
+.admin-canonical-account {
+  height: 70px;
+  margin-top: 17px;
+  padding: 10px 11px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border: 1px solid #ffffff36;
+  border-radius: 12px;
+  background: #ffffff1a;
+  backdrop-filter: blur(4px);
+}
+.admin-canonical-account strong {
+  font-size: 12px;
+}
+.admin-canonical-account small {
+  display: block;
+  color: #ffffffbd;
+  font-size: 10px;
+  margin-top: 5px;
+}
+.admin-canonical-sidebar nav {
+  margin-top: 19px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.admin-canonical-sidebar nav a {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 9px;
+  background: transparent;
+  color: #ffffffe8;
+  font: 500 12px/1.3 inherit;
+  text-decoration: none;
+  font-size: 12px;
+}
+.admin-canonical-sidebar nav svg {
+  flex-shrink: 0;
+}
+.admin-canonical-sidebar nav a:hover {
+  background: #ffffff17;
+}
+.admin-canonical-sidebar nav a.is-active {
+  background: #fff3;
+  color: #fff;
+  font-weight: 600;
+}
+.admin-canonical-bottom {
+  margin-top: 90px;
+  padding-top: 24px;
+}
+.admin-canonical-bottom > strong {
+  display: block;
+  font-size: 12px;
+}
+.admin-canonical-bottom > small {
+  display: block;
+  color: #ffffffbd;
+  font-size: 10px;
+  margin-top: 6px;
+}
+.admin-canonical-bottom button {
+  width: 100%;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border: 0;
+  border-radius: 9px;
+  background: #ffffff1a;
+  color: #fff;
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  padding: 0 12px;
+  margin-top: 18px;
+  cursor: pointer;
+  backdrop-filter: blur(5px);
+}
+.admin-mobile-bar,
+.admin-drawer-overlay {
+  display: none;
+}
+.hotel-setup-layout,
+.waki-admin-layout {
+  display: block !important;
+  padding-left: 250px;
+  min-width: 0;
+}
+.hotel-detail-main,
+.waki-hotels-main,
+.waki-dashboard-main {
+  margin-left: 0 !important;
+  min-width: 0;
+  width: 100%;
+}
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+.admin-canonical-sidebar :focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+@media (max-width: 760px) {
+  .hotel-setup-layout,
+  .waki-admin-layout {
+    padding-left: 0;
+    padding-top: 68px;
+  }
+  .admin-mobile-bar {
+    height: 68px;
+    position: fixed;
+    inset: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 18px;
+    background: #7137e8;
+    color: #fff;
+    z-index: 200;
+  }
+  .admin-mobile-bar img {
+    width: 95px;
+  }
+  .admin-mobile-bar button {
+    margin-left: auto;
+    border: 0;
+    border-radius: 8px;
+    background: #fff2;
+    color: #fff;
+    padding: 8px;
+    display: grid;
+    place-items: center;
+  }
+  .admin-canonical-sidebar {
+    width: min(86vw, 325px);
+    visibility: hidden;
+    transform: translateX(-105%);
+    transition: transform 0.2s;
+    z-index: 2300;
+  }
+  .admin-canonical-sidebar.is-open {
+    visibility: visible;
+    transform: translateX(0);
+  }
+  .admin-drawer-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: #160d2b85;
+    z-index: 2200;
+    border: 0;
+  }
+  .admin-canonical-sidebar nav a {
+    min-height: 48px;
+    font-size: 13px;
+  }
+  .admin-canonical-bottom {
+    margin-top: 60px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-canonical-sidebar {
+    transition: none;
+  }
+}

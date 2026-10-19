@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
-import wakiLogo from '../assets/waki_logo_full.png'
+import AdminSidebar from '../components/admin/AdminSidebar'
 
 function Icon({
   type,
@@ -94,7 +94,6 @@ function HotelsPage() {
   const [errorMessage, setErrorMessage] = useState('')
   const [activeFilter, setActiveFilter] = useState('all')
   const [search, setSearch] = useState('')
-  const [adminName, setAdminName] = useState('Admin WAKI')
 
   useEffect(() => {
     let mounted = true
@@ -103,29 +102,6 @@ function HotelsPage() {
       try {
         setLoading(true)
         setErrorMessage('')
-
-        const {
-          data: { user }
-        } = await supabase.auth.getUser()
-
-        if (user) {
-          const {
-            data: profile
-          } = await supabase
-            .from('profiles')
-            .select('full_name')
-            .eq('id', user.id)
-            .single()
-
-          if (
-            mounted &&
-            profile?.full_name
-          ) {
-            setAdminName(
-              profile.full_name
-            )
-          }
-        }
 
         const {
           data,
@@ -194,17 +170,6 @@ function HotelsPage() {
     }
   }, [])
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-
-    navigate(
-      '/login',
-      {
-        replace: true
-      }
-    )
-  }
-
   const handleHotelClick = (
   hotel
 ) => {
@@ -234,32 +199,6 @@ function HotelsPage() {
     `/hoteles/${hotel.id}/detalle`
   )
 }
-
-  const getInitials = () => {
-    const parts = adminName
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-
-    if (
-      parts.length === 0
-    ) {
-      return 'WA'
-    }
-
-    if (
-      parts.length === 1
-    ) {
-      return parts[0]
-        .substring(
-          0,
-          2
-        )
-        .toUpperCase()
-    }
-
-    return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
-  }
 
   const counts =
     useMemo(() => {
@@ -395,127 +334,7 @@ function HotelsPage() {
           SIDEBAR
       ========================= */}
 
-      <aside className="waki-sidebar">
-
-        <div className="sidebar-brand">
-          <img
-            src={wakiLogo}
-            alt="WAKI"
-          />
-        </div>
-
-        <nav className="waki-sidebar-menu">
-
-          <button
-            className="sidebar-menu-item"
-            onClick={() =>
-              navigate(
-                '/dashboard'
-              )
-            }
-          >
-            <Icon
-              type="dashboard"
-            />
-
-            <span>
-              Dashboard
-            </span>
-          </button>
-
-          <button
-            className="sidebar-menu-item active"
-          >
-            <Icon
-              type="hotel"
-            />
-
-            <span>
-              Hoteles
-            </span>
-          </button>
-
-          <button
-            className="sidebar-menu-item disabled"
-            disabled
-          >
-            <Icon
-              type="calendar"
-            />
-
-            <span>
-              Reservas
-            </span>
-          </button>
-
-          <button
-            className="sidebar-menu-item disabled"
-            disabled
-          >
-            <Icon
-              type="users"
-            />
-
-            <span>
-              Usuarios
-            </span>
-          </button>
-
-          <button className="sidebar-menu-item" onClick={() => navigate('/finanzas')}>
-            <Icon type="money" />
-            <span>Ventas y liquidaciones</span>
-          </button>
-
-          <button
-            className="sidebar-menu-item disabled"
-            disabled
-          >
-            <Icon
-              type="settings"
-            />
-
-            <span>
-              Configuración
-            </span>
-          </button>
-        </nav>
-
-        <div className="sidebar-bottom">
-
-          <div className="sidebar-admin-profile">
-
-            <div className="admin-avatar">
-              {getInitials()}
-            </div>
-
-            <div className="admin-user-copy">
-              <strong>
-                {adminName}
-              </strong>
-
-              <span>
-                Super administrador
-              </span>
-            </div>
-          </div>
-
-          <button
-            className="sidebar-logout"
-            onClick={
-              handleLogout
-            }
-          >
-            Cerrar sesión
-          </button>
-
-          <div className="sidebar-copyright">
-            ©{' '}
-            {new Date().getFullYear()}
-            {' '}
-            WAKI
-          </div>
-        </div>
-      </aside>
+      <AdminSidebar />
 
       {/* =========================
           CONTENIDO

@@ -1,28 +1,72 @@
-import {
-  Navigate,
-  Route,
-  Routes
-} from 'react-router-dom'
+import { Navigate, Route, Routes } from "react-router-dom";
 
-import './App.css'
+import "./App.css";
 
-import ProtectedRoute from './components/ProtectedRoute'
+import ProtectedRoute from "./components/ProtectedRoute";
 
-import LoginPage from './pages/LoginPage'
-import DashboardPage from './pages/DashboardPage'
-import FinancePage from './pages/FinancePage'
-import HotelsPage from './pages/HotelsPage'
-import NewHotelPage from './pages/NewHotelPage'
-import HotelLocationPage from './pages/HotelLocationPage'
-import HotelRoomsPage from './pages/HotelRoomsPage'
-import HotelRatesPage from './pages/HotelRatesPage'
-import HotelReviewPage from './pages/HotelReviewPage'
-import HotelDetailPage from './pages/HotelDetailPage'
+import LoginPage from "./pages/LoginPage";
+import DashboardPage from "./pages/DashboardPage";
+import FinancePage from "./pages/FinancePage";
+import HotelsPage from "./pages/HotelsPage";
+import NewHotelPage from "./pages/NewHotelPage";
+import HotelLocationPage from "./pages/HotelLocationPage";
+import HotelRoomsPage from "./pages/HotelRoomsPage";
+import HotelRatesPage from "./pages/HotelRatesPage";
+import HotelReviewPage from "./pages/HotelReviewPage";
+import HotelDetailPage from "./pages/HotelDetailPage";
+
+import UsersPage from "./pages/UsersPage";
+import ReservationsPage from "./pages/ReservationsPage";
+import ReportsPage from "./pages/ReportsPage";
+import SettingsPage from "./pages/SettingsPage";
+import AccountActivationPage from "./pages/AccountActivationPage";
+import "./pages/AdminControl.css";
+import "./components/admin/AdminSidebar.css";
 
 function App() {
   return (
     <Routes>
-      <Route path="/finanzas" element={<ProtectedRoute><FinancePage /></ProtectedRoute>} />
+      <Route path="/activar-cuenta" element={<AccountActivationPage />} />
+      <Route
+        path="/usuarios"
+        element={
+          <ProtectedRoute>
+            <UsersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reservas"
+        element={
+          <ProtectedRoute>
+            <ReservationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reportes"
+        element={
+          <ProtectedRoute>
+            <ReportsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/configuracion"
+        element={
+          <ProtectedRoute>
+            <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/finanzas"
+        element={
+          <ProtectedRoute>
+            <FinancePage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/hoteles/:hotelId/detalle"
@@ -33,22 +77,9 @@ function App() {
         }
       />
 
-      <Route
-        path="/"
-        element={
-          <Navigate
-            to="/login"
-            replace
-          />
-        }
-      />
+      <Route path="/" element={<Navigate to="/login" replace />} />
 
-      <Route
-        path="/login"
-        element={
-          <LoginPage />
-        }
-      />
+      <Route path="/login" element={<LoginPage />} />
 
       <Route
         path="/dashboard"
@@ -113,18 +144,9 @@ function App() {
         }
       />
 
-      <Route
-        path="*"
-        element={
-          <Navigate
-            to="/login"
-            replace
-          />
-        }
-      />
-
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;

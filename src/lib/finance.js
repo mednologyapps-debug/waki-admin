@@ -39,7 +39,7 @@ const errors = {
   SALE_NOT_RECONCILABLE:
     "Esta venta ya cambió de estado o requiere una revisión especial.",
   INVALID_RATE:
-    "La comisión debe estar entre 0 y 100, con un máximo de dos decimales.",
+    "Selecciona una comisión de 4% u 8%.",
   INVALID_RECONCILIATION: "Revisa la comisión y la referencia del cobro.",
   INVALID_PAYOUT: "Revisa la referencia, la fecha y las notas del depósito.",
   INVALID_DATES: "La fecha inicial debe ser anterior o igual a la final.",

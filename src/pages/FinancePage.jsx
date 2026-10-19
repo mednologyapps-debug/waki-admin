@@ -452,16 +452,17 @@ export default function FinancePage() {
               </p>
               <label>
                 Comisión WAKI (%)
-                <input
+                <select
                   name="rate"
-                  type="number"
                   required
-                  min="0"
-                  max="100"
-                  step="0.01"
                   defaultValue={settings.commission_rate ?? ""}
-                  placeholder="Ej. 8"
-                />
+                >
+                  <option value="" disabled>
+                    Selecciona una comisión
+                  </option>
+                  <option value="4">4%</option>
+                  <option value="8">8%</option>
+                </select>
               </label>
               <small>
                 Ejemplo: con 8%, por cada S/ 100 WAKI recibe S/ 8 y el hotel S/
@@ -573,16 +574,25 @@ export default function FinancePage() {
                         </p>
                         <label>
                           Comisión aplicada (%)
-                          <input
+                          <select
                             name="rate"
-                            type="number"
-                            min="0"
-                            max="100"
-                            step="0.01"
                             required
-                            readOnly={action.sale.commission_rate != null}
                             defaultValue={action.sale.commission_rate ?? ""}
-                          />
+                          >
+                            <option value="" disabled>
+                              Selecciona una comisión
+                            </option>
+                            {action.sale.commission_rate != null ? (
+                              <option value={action.sale.commission_rate}>
+                                {action.sale.commission_rate}% · tasa histórica
+                              </option>
+                            ) : (
+                              <>
+                                <option value="4">4%</option>
+                                <option value="8">8%</option>
+                              </>
+                            )}
+                          </select>
                         </label>
                         <label>
                           Referencia del cobro verificado
