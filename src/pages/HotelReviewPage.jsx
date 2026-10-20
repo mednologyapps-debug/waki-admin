@@ -1,3 +1,4 @@
+import CommissionApproval from '../components/admin/CommissionApproval'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -73,6 +74,8 @@ function Icon({ type, size = 19 }) {
 }
 
 function HotelReviewPage() {
+  const [approvalOpen,setApprovalOpen]=useState(false)
+  const handlePublish=()=>setApprovalOpen(true)
   const navigate = useNavigate()
   const { hotelId } = useParams()
 
@@ -400,7 +403,7 @@ function HotelReviewPage() {
     }
   }
 
-  const handlePublish = async () => {
+  const performApprove = async () => {
     if (!isComplete) {
       setErrorMessage(
         'Completa Marca, Sede, Habitaciones y Tarifas antes de publicar.'
@@ -498,6 +501,7 @@ function HotelReviewPage() {
   return (
     <div className="hotel-setup-layout">
       <AdminSidebar />
+        {approvalOpen&&<CommissionApproval hotelId={hotelId} onClose={()=>setApprovalOpen(false)} onApprove={performApprove}/>}
 
       <main className="hotel-setup-main">
 

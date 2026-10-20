@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import CommissionApproval from '../components/admin/CommissionApproval'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
@@ -88,6 +89,8 @@ function Icon({ type, size = 19 }) {
 }
 
 function HotelDetailPage() {
+  const [approvalOpen,setApprovalOpen]=useState(false)
+  const handleApprove=()=>setApprovalOpen(true)
   const navigate = useNavigate()
   const { hotelId } = useParams()
 
@@ -104,7 +107,7 @@ function HotelDetailPage() {
   const [actionModal, setActionModal] = useState(null)
   const [actionComment, setActionComment] = useState('')
 
-  const loadHotel = async () => {
+  const loadHotel = useCallback(async () => {
     try {
       setLoading(true)
       setErrorMessage('')
@@ -260,11 +263,12 @@ function HotelDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [hotelId])
 
   useEffect(() => {
-    loadHotel()
-  }, [hotelId])
+    const task=setTimeout(()=>loadHotel(),0)
+    return ()=>clearTimeout(task)
+  }, [loadHotel])
 
   const totals = useMemo(() => {
     const inventory = rooms.reduce(
@@ -424,8 +428,8 @@ function HotelDetailPage() {
     }
   }
 
-  const handleApprove = () => {
-    updateHotelStatus({
+  const performApprove = () => {
+    return updateHotelStatus({
       approvalStatus:
         'approved',
 
@@ -573,6 +577,7 @@ function HotelDetailPage() {
   return (
     <div className="hotel-setup-layout">
       <AdminSidebar />
+        {approvalOpen&&<CommissionApproval hotelId={hotelId} onClose={()=>setApprovalOpen(false)} onApprove={performApprove}/>}
 
       <main className="hotel-detail-main">
 
