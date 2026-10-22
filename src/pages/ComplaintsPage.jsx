@@ -57,10 +57,12 @@ export default function ComplaintsPage() {
     setBusy(true);
     setError("");
     const form = new FormData(event.currentTarget);
+    const actionType = form.get("action_type");
+    const nextStatus = form.get("status");
     const { error: saveError } = await supabase.rpc("admin_record_consumer_complaint_action", {
       p_complaint_id: selected.id,
-      p_action_type: form.get("action_type"),
-      p_status: form.get("status"),
+      p_action_type: actionType,
+      p_status: nextStatus,
       p_message: form.get("message"),
     });
     if (saveError) setError(saveError.message);
@@ -68,7 +70,7 @@ export default function ComplaintsPage() {
       setNotice("Actualización guardada en el historial.");
       event.currentTarget.reset();
       await load();
-      await openComplaint(selected);
+      await openComplaint({ ...selected, status: nextStatus });
     }
     setBusy(false);
   }
