@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase'
 
 import AdminSidebar from '../components/admin/AdminSidebar'
 import HotelSetupBottomBar from '../components/hotels/HotelSetupBottomBar'
+import AdminHotelLocationPicker from '../components/hotels/AdminHotelLocationPicker'
 
 import wakiMascot from '../assets/waki_admin_access.png'
 
@@ -66,6 +67,8 @@ function Icon({ type, size = 19 }) {
 const EMPTY_FORM = {
   hotelName: '',
   address: '',
+  latitude: null,
+  longitude: null,
   district: '',
   province: 'Lima',
   department: 'Lima',
@@ -164,6 +167,8 @@ function HotelLocationPage() {
               name,
               description,
               address,
+              latitude,
+              longitude,
               district,
               province,
               department,
@@ -196,6 +201,14 @@ function HotelLocationPage() {
 
               address:
                 hotel.address || '',
+
+              latitude:
+                hotel.latitude ??
+                null,
+
+              longitude:
+                hotel.longitude ??
+                null,
 
               district:
                 hotel.district || '',
@@ -313,7 +326,9 @@ function HotelLocationPage() {
         form.address
           .trim() !== '' &&
         form.district
-          .trim() !== '',
+          .trim() !== '' &&
+        form.latitude != null &&
+        form.longitude != null,
 
       region:
         form.province
@@ -340,6 +355,13 @@ function HotelLocationPage() {
 
     if (!form.address.trim()) {
       return 'Ingresa la dirección de la sede.'
+    }
+
+    if (
+      form.latitude == null ||
+      form.longitude == null
+    ) {
+      return 'Selecciona la ubicación exacta en Google Maps.'
     }
 
     if (!form.district.trim()) {
@@ -423,6 +445,16 @@ function HotelLocationPage() {
 
         address:
           form.address.trim(),
+
+        latitude:
+          Number(
+            form.latitude
+          ),
+
+        longitude:
+          Number(
+            form.longitude
+          ),
 
         district:
           form.district.trim(),
@@ -740,6 +772,71 @@ function HotelLocationPage() {
                     }
                     placeholder="Ej. Hotel Velmar Boutique"
                   />
+                </div>
+
+                {/* UBICACIÓN GOOGLE MAPS */}
+                <div className="brand-form-field full">
+
+                  <AdminHotelLocationPicker
+                    latitude={
+                      form.latitude
+                    }
+                    longitude={
+                      form.longitude
+                    }
+                    address={
+                      form.address
+                    }
+                    onSelect={(
+                      location
+                    ) => {
+                      setForm(
+                        (
+                          current
+                        ) => {
+                          const updated =
+                            {
+                              ...current,
+
+                              latitude:
+                                location.latitude,
+
+                              longitude:
+                                location.longitude,
+
+                              address:
+                                location.address ||
+                                current.address,
+
+                              district:
+                                location.district ||
+                                current.district,
+
+                              province:
+                                location.province ||
+                                current.province,
+
+                              department:
+                                location.department ||
+                                current.department
+                            }
+
+                          localStorage.setItem(
+                            `waki-hotel-location-draft-${brandId}`,
+                            JSON.stringify(
+                              updated
+                            )
+                          )
+
+                          return updated
+                        }
+                      )
+
+                      setErrorMessage('')
+                      setSuccessMessage('')
+                    }}
+                  />
+
                 </div>
 
                 {/* DIRECCIÓN */}
