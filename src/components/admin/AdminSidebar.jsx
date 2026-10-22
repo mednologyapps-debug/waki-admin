@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   ShieldCheck,
+  MessageSquareWarning,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAdminSession } from "../../lib/adminSession";
@@ -22,6 +23,7 @@ const links = [
   ["/dashboard", "Resumen", LayoutDashboard],
   ["/hoteles", "Hoteles", Building2],
   ["/reservas", "Reservas", CalendarDays],
+  ["/reclamos", "Libro de Reclamaciones", MessageSquareWarning],
   ["/usuarios", "Usuarios", UsersRound],
   ["/finanzas", "Ventas y liquidaciones", CircleDollarSign],
   ["/reportes", "Reportes", ChartNoAxesCombined],
