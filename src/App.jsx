@@ -20,6 +20,7 @@ import ReservationsPage from "./pages/ReservationsPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import AccountActivationPage from "./pages/AccountActivationPage";
+import ComplaintsPage from "./pages/ComplaintsPage";
 import "./pages/AdminControl.css";
 import "./components/admin/AdminSidebar.css";
 
@@ -144,6 +145,14 @@ function App() {
         }
       />
 
+      <Route
+        path="/reclamos"
+        element={
+          <ProtectedRoute>
+            <ComplaintsPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
