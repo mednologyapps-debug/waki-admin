@@ -436,6 +436,14 @@ function HotelsPage() {
           </button>
 
           <button
+            className="sidebar-menu-item"
+            onClick={() => navigate('/reclamos')}
+          >
+            <Icon type="calendar" />
+            <span>Libro de Reclamaciones</span>
+          </button>
+
+          <button
             className="sidebar-menu-item disabled"
             disabled
           >
