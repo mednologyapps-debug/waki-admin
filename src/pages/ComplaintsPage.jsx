@@ -63,6 +63,7 @@ function ComplaintsPage() {
 
   const saveAction = async (event) => {
     event.preventDefault()
+    const formElement = event.currentTarget
     if (!selected) return
     setSaving(true)
     setError('')
@@ -86,7 +87,7 @@ function ComplaintsPage() {
       setError('No se pudo guardar la acción. Verifica tu acceso e intenta nuevamente.')
     } else {
       setNotice('Actualización guardada en el historial.')
-      event.currentTarget.reset()
+      formElement.reset()
       await loadRows()
       await openRow({ ...selected, status: nextStatus })
     }
