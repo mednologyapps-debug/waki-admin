@@ -17,6 +17,7 @@ import HotelRoomsPage from './pages/HotelRoomsPage'
 import HotelRatesPage from './pages/HotelRatesPage'
 import HotelReviewPage from './pages/HotelReviewPage'
 import HotelDetailPage from './pages/HotelDetailPage'
+import ComplaintsPage from './pages/ComplaintsPage'
 
 function App() {
   return (
@@ -27,6 +28,15 @@ function App() {
         element={
           <ProtectedRoute>
             <HotelDetailPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/reclamos"
+        element={
+          <ProtectedRoute>
+            <ComplaintsPage />
           </ProtectedRoute>
         }
       />
