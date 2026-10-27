@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import './ComplaintsPage.css'
+import AdminSidebar from '../components/admin/AdminSidebar'
 
 const statuses = {
   received: 'Recibido',
@@ -44,7 +45,7 @@ function ComplaintsPage() {
     setLoading(false)
   }, [])
 
-  useEffect(() => { loadRows() }, [loadRows])
+  useEffect(() => { const timer=setTimeout(loadRows,0); return ()=>clearTimeout(timer) }, [loadRows])
 
   const openRow = async (row) => {
     setSelected(row)
@@ -95,7 +96,7 @@ function ComplaintsPage() {
   }
 
   return (
-    <main className="complaints-page">
+    <div className="hotel-setup-layout"><AdminSidebar /><main className="complaints-page control-main">
       <header className="complaints-header">
         <div>
           <span>WAKI ADMIN</span>
@@ -186,7 +187,7 @@ function ComplaintsPage() {
           </form>
         </section>
       )}
-    </main>
+    </main></div>
   )
 }
 

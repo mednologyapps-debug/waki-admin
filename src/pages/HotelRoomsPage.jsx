@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabase'
 import AdminSidebar from '../components/admin/AdminSidebar'
 import HotelSetupBottomBar from '../components/hotels/HotelSetupBottomBar'
 
-import wakiMascot from '../assets/waki_admin_access.png'
 
 function Icon({ type, size = 19 }) {
   const icons = {

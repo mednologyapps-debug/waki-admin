@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import CommissionApproval from '../components/admin/CommissionApproval'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
@@ -88,6 +89,8 @@ function Icon({ type, size = 19 }) {
 }
 
 function HotelDetailPage() {
+  const [approvalOpen,setApprovalOpen]=useState(false)
+  const handleApprove=()=>setApprovalOpen(true)
   const navigate = useNavigate()
   const { hotelId } = useParams()
 
@@ -104,7 +107,7 @@ function HotelDetailPage() {
   const [actionModal, setActionModal] = useState(null)
   const [actionComment, setActionComment] = useState('')
 
-  const loadHotel = async () => {
+  const loadHotel = useCallback(async () => {
     try {
       setLoading(true)
       setErrorMessage('')
@@ -260,11 +263,12 @@ function HotelDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [hotelId])
 
   useEffect(() => {
-    loadHotel()
-  }, [hotelId])
+    const task=setTimeout(()=>loadHotel(),0)
+    return ()=>clearTimeout(task)
+  }, [loadHotel])
 
   const totals = useMemo(() => {
     const inventory = rooms.reduce(
@@ -409,6 +413,7 @@ function HotelDetailPage() {
       setSuccessMessage(
         successText
       )
+      return true
     } catch (error) {
       console.error(
         'Error cambiando estado:',
@@ -419,26 +424,12 @@ function HotelDetailPage() {
         error.message ||
           'No se pudo actualizar el estado del hotel.'
       )
+      return false
     } finally {
       setUpdating(false)
     }
   }
 
-  const handleApprove = () => {
-    updateHotelStatus({
-      approvalStatus:
-        'approved',
-
-      isActive:
-        true,
-
-      action:
-        'approved',
-
-      successText:
-        'El hotel fue aprobado y publicado.'
-    })
-  }
 
   const handleReject = () => {
     if (!actionComment.trim()) {
@@ -573,6 +564,7 @@ function HotelDetailPage() {
   return (
     <div className="hotel-setup-layout">
       <AdminSidebar />
+        {approvalOpen&&<CommissionApproval hotelId={hotelId} onClose={()=>setApprovalOpen(false)} onApprove={loadHotel}/>}
 
       <main className="hotel-detail-main">
 
