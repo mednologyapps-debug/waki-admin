@@ -1,4 +1,0 @@
-const checks=[['web','https://wakipe.com/api/health','json'],['hotel','https://hotel.wakipe.com/version.json','json'],['hotel-login','https://hotel.wakipe.com/login','html'],['legal','https://wakipe.com/legal.html','html'],['delete-account','https://wakipe.com/eliminar-cuenta.html','html']];
-let failed=false;
-for(const [name,url,type] of checks){const start=Date.now();try{const r=await fetch(url,{signal:AbortSignal.timeout(15000),headers:{'Cache-Control':'no-cache'}});if(!r.ok)throw new Error('HTTP_'+r.status);const body=await r.text();if(type==='json')JSON.parse(body);if(type==='html'&&!body.toLowerCase().includes('<html'))throw new Error('INVALID_HTML');console.log(JSON.stringify({check:name,status:'ok',ms:Date.now()-start}));}catch(e){failed=true;console.error(JSON.stringify({check:name,status:'failed',code:e.name==='TimeoutError'?'TIMEOUT':e.message.replace(/https?:\/\/\S+/g,'[url]').slice(0,100)}))}}
-process.exitCode=failed?1:0;
