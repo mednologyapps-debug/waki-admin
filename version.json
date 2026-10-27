@@ -1,7 +1,7 @@
 {
-  "source_commit": "f2ec723b4ad2a59e433dd9377015e4cb803de730",
+  "source_commit": "8c23335d7c909c767ec78e10f81496b58ddc94c2",
   "source_branch": "codex/launch-readiness",
   "publication_branch": "deploy/admin",
-  "built_at": "2026-10-27T21:20:51.369095+00:00",
+  "built_at": "2026-10-27T21:25:38.102629+00:00",
   "format": "vite-static"
 }
