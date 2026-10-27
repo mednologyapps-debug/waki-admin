@@ -12,6 +12,8 @@ import {
   Menu,
   X,
   ShieldCheck,
+  Activity,
+  MessageSquare,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAdminSession } from "../../lib/adminSession";
@@ -24,6 +26,9 @@ const links = [
   ["/reservas", "Reservas", CalendarDays],
   ["/usuarios", "Usuarios", UsersRound],
   ["/finanzas", "Ventas y liquidaciones", CircleDollarSign],
+  ["/analitica", "Analítica de negocio", ChartNoAxesCombined],
+  ["/monitoreo", "Monitoreo y correos", Activity],
+  ["/reclamos", "Reclamaciones", MessageSquare],
   ["/reportes", "Reportes", ChartNoAxesCombined],
   ["/configuracion", "Configuración", Settings],
 ];

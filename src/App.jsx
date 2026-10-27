@@ -17,6 +17,8 @@ import HotelDetailPage from "./pages/HotelDetailPage";
 
 import UsersPage from "./pages/UsersPage";
 import ReservationsPage from "./pages/ReservationsPage";
+import LaunchDashboardPage from "./pages/LaunchDashboardPage";
+import ComplaintsPage from "./pages/ComplaintsPage";
 import ReportsPage from "./pages/ReportsPage";
 import SettingsPage from "./pages/SettingsPage";
 import AccountActivationPage from "./pages/AccountActivationPage";
@@ -26,6 +28,9 @@ import "./components/admin/AdminSidebar.css";
 function App() {
   return (
     <Routes>
+      <Route path="/analitica" element={<ProtectedRoute><LaunchDashboardPage /></ProtectedRoute>} />
+      <Route path="/monitoreo" element={<ProtectedRoute><LaunchDashboardPage monitoring /></ProtectedRoute>} />
+      <Route path="/reclamos" element={<ProtectedRoute><ComplaintsPage /></ProtectedRoute>} />
       <Route path="/activar-cuenta" element={<AccountActivationPage />} />
       <Route
         path="/usuarios"

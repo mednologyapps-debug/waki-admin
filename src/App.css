@@ -7342,3 +7342,78 @@ button {
   background: #eee7f6;
   color: #7137e8;
 }
+/* ADMIN HOTEL — GOOGLE MAPS LOCATION PICKER
+   ========================================================= */
+
+.admin-hotel-location-picker {
+  width: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+  border: 1px solid #e5dcf1;
+  border-radius: 16px;
+  background: #faf8ff;
+}
+
+.admin-hotel-location-picker__copy strong,
+.admin-hotel-location-picker__copy span {
+  display: block;
+}
+
+.admin-hotel-location-picker__copy strong {
+  color: #241b3d;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-hotel-location-picker__copy span {
+  margin-top: 4px;
+  color: #81778f;
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.admin-hotel-location-picker__search {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 13px;
+  padding: 6px 10px;
+  box-sizing: border-box;
+  border: 1px solid #ded3ec;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.admin-hotel-location-picker__search gmp-place-autocomplete {
+  width: 100%;
+  color-scheme: light;
+}
+
+.admin-hotel-location-picker__map {
+  width: 100%;
+  height: 320px;
+  margin-top: 11px;
+  overflow: hidden;
+  border: 1px solid #e6deed;
+  border-radius: 14px;
+  background: #f2edf8;
+}
+
+.admin-hotel-location-picker__status {
+  margin-top: 10px;
+  color: #72667f;
+  font-size: 10px;
+}
+
+.admin-hotel-location-picker__status strong {
+  color: #7137e8;
+}
+
+@media (max-width: 760px) {
+  .admin-hotel-location-picker {
+    padding: 13px;
+  }
+
+  .admin-hotel-location-picker__map {
+    height: 270px;
+  }
+}

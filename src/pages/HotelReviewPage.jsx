@@ -388,6 +388,7 @@ function HotelReviewPage() {
       }
 
       navigate('/hoteles')
+      return true
     } catch (error) {
       console.error(
         'Error enviando hotel a revisión:',
@@ -397,72 +398,6 @@ function HotelReviewPage() {
       setErrorMessage(
         error.message ||
           'No se pudo enviar el hotel a revisión.'
-      )
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const performApprove = async () => {
-    if (!isComplete) {
-      setErrorMessage(
-        'Completa Marca, Sede, Habitaciones y Tarifas antes de publicar.'
-      )
-
-      return
-    }
-
-    try {
-      setSaving(true)
-      setErrorMessage('')
-      setSuccessMessage('')
-
-      const {
-        data: { user }
-      } = await supabase.auth.getUser()
-
-      const now = new Date().toISOString()
-
-      const {
-        error: hotelError
-      } = await supabase
-        .from('hotels')
-        .update({
-          approval_status: 'approved',
-          is_active: true,
-          reviewed_at: now
-        })
-        .eq('id', hotelId)
-
-      if (hotelError) {
-        throw hotelError
-      }
-
-      const {
-        error: eventError
-      } = await supabase
-        .from('hotel_review_events')
-        .insert({
-          hotel_id: hotelId,
-          action: 'approved',
-          comment: 'Hotel aprobado y publicado.',
-          created_by: user?.id || null
-        })
-
-      if (eventError) {
-        throw eventError
-      }
-
-      navigate('/hoteles')
-    } catch (error) {
-      console.error(
-        'Error publicando hotel:',
-        error
-      )
-
-      setErrorMessage(
-        error.message ||
-          'No se pudo aprobar y publicar el hotel.'
       )
     } finally {
       setSaving(false)
@@ -501,7 +436,7 @@ function HotelReviewPage() {
   return (
     <div className="hotel-setup-layout">
       <AdminSidebar />
-        {approvalOpen&&<CommissionApproval hotelId={hotelId} onClose={()=>setApprovalOpen(false)} onApprove={performApprove}/>}
+        {approvalOpen&&<CommissionApproval hotelId={hotelId} onClose={()=>setApprovalOpen(false)} onApprove={()=>navigate('/hoteles')}/>}
 
       <main className="hotel-setup-main">
 

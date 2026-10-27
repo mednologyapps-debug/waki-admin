@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer";
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.114.0";
-import nodemailer from "npm:nodemailer@7.0.11";
+import nodemailer from "npm:nodemailer@10.1.1";
 import { payoutPdf, payoutHtml } from "./payoutDocument.js";
 const cors = {
   "Access-Control-Allow-Origin": "*",

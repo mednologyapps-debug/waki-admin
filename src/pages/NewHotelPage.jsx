@@ -64,7 +64,7 @@ function NewHotelPage() {
     useState(brandIdFromUrl || null)
 
   const [form, setForm] =
-    useState(EMPTY_FORM)
+    useState(()=>{if(brandIdFromUrl)return EMPTY_FORM;try{return {...EMPTY_FORM,...JSON.parse(localStorage.getItem('waki-hotel-brand-draft')||'{}')}}catch{return EMPTY_FORM}})
 
   const [loading, setLoading] =
     useState(Boolean(brandIdFromUrl))
@@ -79,27 +79,7 @@ function NewHotelPage() {
     useState('')
 
   useEffect(() => {
-    if (!brandIdFromUrl) {
-      const savedDraft =
-        localStorage.getItem(
-          'waki-hotel-brand-draft'
-        )
-
-      if (savedDraft) {
-        try {
-          setForm(
-            JSON.parse(savedDraft)
-          )
-        } catch {
-          localStorage.removeItem(
-            'waki-hotel-brand-draft'
-          )
-        }
-      }
-
-      setLoading(false)
-      return
-    }
+    if (!brandIdFromUrl) return
 
     const loadBrand = async () => {
       try {
@@ -166,7 +146,8 @@ function NewHotelPage() {
       }
     }
 
-    loadBrand()
+    const timer=setTimeout(loadBrand,0)
+    return ()=>clearTimeout(timer)
   }, [brandIdFromUrl])
 
   const updateField = (
