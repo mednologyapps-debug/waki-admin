@@ -1,3 +1,4 @@
+import {csvField} from './csv';
 import { supabase } from "./supabase";
 export const roles = {
   user: "Usuario",
@@ -84,13 +85,7 @@ export async function adminAction(action, data) {
   return result;
 }
 export function downloadCsv(filename, rows) {
-  const safe = (v) =>
-    '"' +
-    String(v ?? "")
-      .replace(/^[-=+@]/, "'$&")
-      .replaceAll('"', '""') +
-    '"';
-  const csv = rows.map((r) => r.map(safe).join(";")).join("\r\n");
+  const csv = rows.map((r) => r.map(csvField).join(";")).join("\r\n");
   const url = URL.createObjectURL(
     new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }),
   );
