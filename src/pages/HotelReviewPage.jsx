@@ -440,8 +440,6 @@ function HotelReviewPage() {
         {approvalOpen&&<CommissionApproval hotelId={hotelId} onClose={()=>setApprovalOpen(false)} onApprove={()=>navigate('/hoteles')}/>}
 
       <main className="hotel-setup-main">
-        <HotelDossierVerification hotelId={hotelId} />
-
         <section className="hotel-brand-heading">
           <span>
             Configuración / Paso 5
@@ -469,6 +467,8 @@ function HotelReviewPage() {
             </strong>
           </div>
         </section>
+
+        <HotelDossierVerification hotelId={hotelId} />
 
         <div className="review-layout">
 
