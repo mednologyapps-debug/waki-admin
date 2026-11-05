@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { AdminDialog, Feedback } from "./AdminUI";
 import { supabase } from "../../lib/supabase";
+import HotelDossierVerification from "./HotelDossierVerification";
 export default function CommissionApproval({ hotelId, onClose, onApprove }) {
   const [affiliation,setAffiliation]=useState(null);
+  const [dossierVerified,setDossierVerified]=useState(false);
   const [rate, setRate] = useState(null),
     [ready, setReady] = useState(false),
     [busy, setBusy] = useState(false),
@@ -33,7 +35,7 @@ export default function CommissionApproval({ hotelId, onClose, onApprove }) {
     setBusy(true);
     try {
       const form=new FormData(e.currentTarget);
-      const {error:approvalError}=await supabase.rpc("admin_approve_hotel_affiliation",{p_hotel:hotelId,p_data:{rate:rate??Number(form.get("rate")),agreement_reference:form.get("agreement_reference"),bank_verified:form.get("bank_verified")==="on",training_verified:form.get("training_verified")==="on"}});
+      const {error:approvalError}=await supabase.rpc("admin_approve_hotel_affiliation",{p_hotel:hotelId,p_data:{rate:rate??Number(form.get("rate")),agreement_reference:form.get("agreement_reference"),bank_verified:dossierVerified,training_verified:form.get("training_verified")==="on"}});
       if(approvalError)throw approvalError;
       await onApprove();
       onClose();
@@ -74,7 +76,8 @@ export default function CommissionApproval({ hotelId, onClose, onApprove }) {
             )}
             <p className="control-hint">Aceptación del hotel: <strong>{affiliation?.accepted?"Registrada":"Pendiente: el representante debe aceptarla en su portal"}</strong>.</p>
             <label>Referencia del acuerdo comercial<input name="agreement_reference" minLength="5" maxLength="160" required defaultValue={affiliation?.review?.agreement_reference||""} placeholder="Contrato o expediente acordado con el hotel" /></label>
-            <label className="control-check"><input name="bank_verified" type="checkbox" required defaultChecked={Boolean(affiliation?.review?.bank_verified)}/> Verifiqué la titularidad y los datos bancarios del hotel.</label>
+            <HotelDossierVerification hotelId={hotelId} onVerified={setDossierVerified} />
+            {!dossierVerified && <p role="alert" className="control-hint">Antes de aprobar, revisa y verifica el contrato firmado y la cuenta bancaria desde el expediente.</p>}
             <label className="control-check"><input name="training_verified" type="checkbox" required defaultChecked={Boolean(affiliation?.review?.training_verified)}/> Verifiqué la documentación y la capacitación del personal para gestionar reservas y bloqueos.</label>
             <p className="control-hint">
               La comisión se aplicará a las nuevas ventas. Cada operación
@@ -84,7 +87,7 @@ export default function CommissionApproval({ hotelId, onClose, onApprove }) {
               <input type="checkbox" required /> Revisé el hotel y su comisión
               antes de aprobarlo.
             </label>
-            <button className="control-btn primary" disabled={busy || !affiliation?.accepted}>
+            <button className="control-btn primary" disabled={busy || !affiliation?.accepted || !dossierVerified}>
               {busy ? "Guardando…" : "Aprobar hotel"}
             </button>
           </>
