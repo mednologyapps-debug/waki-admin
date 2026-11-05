@@ -1,6 +1,13 @@
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const titles={reservation_confirmed:'Tu reserva está confirmada',reservation_cancelled:'Actualización de tu reserva',extension_confirmed:'Tu ampliación está confirmada',hotel_approved:'Tu hotel ya es parte de WAKI',hotel_rejected:'Tenemos observaciones sobre tu hotel',hotel_pending_review:'Recibimos tu hotel para revisión'};
 export function communicationTemplate(row){
+ if(row.kind==='mail_test'){
+  const title='Prueba de correo WAKI';
+  const text='Esta es una prueba solicitada desde el panel global de WAKI. Si recibes este mensaje, el proveedor aceptó el envío y el correo llegó a esta cuenta. No respondas a este aviso.';
+  const html='<html lang="es"><body style="font-family:Arial,sans-serif;background:#f7f3fe;padding:32px;color:#30233f"><div style="max-width:540px;margin:auto;padding:32px;border-radius:20px;background:#fff"><h1 style="color:#7137e8">WAKI</h1><h2>'+title+'</h2><p>'+text+'</p><p style="font-size:12px;color:#776985">No se realizó ninguna reserva ni cobro.</p></div></body></html>';
+  return {subject:'WAKI · '+title,text,html};
+ }
+
  const p=row.payload||{};const title=row.audience==='hotel'&&row.kind==='reservation_confirmed'?'Tienes una nueva reserva WAKI':titles[row.kind]||'Novedades de WAKI';
  const date=v=>v?new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',dateStyle:'medium',timeStyle:'short'}).format(new Date(v)):'—';
  const details=[['Hotel',p.hotel_name],['Reserva',p.booking_code],['Inicio',p.start_at&&date(p.start_at)],['Salida',p.end_at&&date(p.end_at)],['Total',p.amount!=null?`${p.currency||'PEN'} ${Number(p.amount).toFixed(2)}`:null]].filter(([,v])=>v);
