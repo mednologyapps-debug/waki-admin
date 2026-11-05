@@ -1,4 +1,5 @@
 import CommissionApproval from '../components/admin/CommissionApproval'
+import HotelDossierVerification from '../components/admin/HotelDossierVerification'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -436,6 +437,7 @@ function HotelReviewPage() {
   return (
     <div className="hotel-setup-layout">
       <AdminSidebar />
+        <HotelDossierVerification hotelId={hotelId} />
         {approvalOpen&&<CommissionApproval hotelId={hotelId} onClose={()=>setApprovalOpen(false)} onApprove={()=>navigate('/hoteles')}/>}
 
       <main className="hotel-setup-main">
