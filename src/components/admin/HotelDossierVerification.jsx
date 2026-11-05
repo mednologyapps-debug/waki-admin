@@ -22,7 +22,8 @@ export default function HotelDossierVerification({ hotelId, onVerified, allowVer
     onVerified?.(Boolean(data?.contract_verified && data?.bank_verified))
   }
   useEffect(() => {
-    void load()
+    const task = setTimeout(() => { void load() }, 0)
+    return () => clearTimeout(task)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hotelId])
 
