@@ -1,4 +1,5 @@
 import CommissionApproval from '../components/admin/CommissionApproval'
+import HotelDossierVerification from '../components/admin/HotelDossierVerification'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -726,6 +727,8 @@ function HotelDetailPage() {
             {successMessage}
           </div>
         )}
+
+        <HotelDossierVerification hotelId={hotelId} />
 
         <section className="hotel-detail-kpis">
 
