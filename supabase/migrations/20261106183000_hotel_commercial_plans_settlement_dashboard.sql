@@ -117,41 +117,41 @@ end $$;
 create or replace function public.admin_hotel_commercial_plan(
  p_hotel uuid,p_action text default 'read',p_data jsonb default '{}'::jsonb)
 returns jsonb language plpgsql security definer set search_path='' as $$
-declare c waki_private.hotel_subscription_charges; ref text;day date;
+declare charge_record waki_private.hotel_subscription_charges; ref text;day date;
 begin
  if auth.uid() is null or not coalesce(public.is_waki_admin(),false) then raise exception 'NOT_AUTHORIZED' using errcode='42501';end if;
  if p_hotel is null or not exists(select 1 from public.hotels where id=p_hotel) then raise exception 'HOTEL_NOT_FOUND';end if;
  if p_action='assign' then
    perform waki_private.assign_commercial_plan(p_hotel,p_data->>'code',p_data->>'reason');
  elsif p_action in ('paid','waived') then
-   select * into c from waki_private.hotel_subscription_charges
+   select * into charge_record from waki_private.hotel_subscription_charges
     where id=(p_data->>'charge_id')::uuid and hotel_id=p_hotel for update;
-   if c.id is null or c.status<>'pending' then raise exception 'CHARGE_NOT_PENDING';end if;
+   if charge_record.id is null or charge_record.status<>'pending' then raise exception 'CHARGE_NOT_PENDING';end if;
    if p_action='paid' then
     ref:=trim(coalesce(p_data->>'reference',''));
     day:=(p_data->>'paid_on')::date;
     if length(ref)<3 or length(ref)>120 or day is null or day>(now() at time zone 'America/Lima')::date
      then raise exception 'PAYMENT_REFERENCE_REQUIRED';end if;
     update waki_private.hotel_subscription_charges
-      set status='paid',paid_on=day,payment_reference=ref,verified_by=auth.uid(),verified_at=now() where id=c.id;
+      set status='paid',paid_on=day,payment_reference=ref,verified_by=auth.uid(),verified_at=now() where id=charge_record.id;
    else
     if length(trim(coalesce(p_data->>'reason','')))<8 then raise exception 'WAIVER_REASON_REQUIRED';end if;
     update waki_private.hotel_subscription_charges
-      set status='waived',waiver_reason=trim(p_data->>'reason'),verified_by=auth.uid(),verified_at=now() where id=c.id;
+      set status='waived',waiver_reason=trim(p_data->>'reason'),verified_by=auth.uid(),verified_at=now() where id=charge_record.id;
    end if;
    insert into waki_private.hotel_finance_audit(hotel_id,action,actor,details)
     values(p_hotel,'subscription_'||p_action,auth.uid(),
-    jsonb_build_object('charge',c.id,'reference',ref,'reason',p_data->>'reason'));
+    jsonb_build_object('charge',charge_record.id,'reference',ref,'reason',p_data->>'reason'));
  elsif p_action<>'read' then
    raise exception 'INVALID_ACTION';
  end if;
  return jsonb_build_object(
   'plan',(select to_jsonb(p) from waki_private.hotel_commercial_plans p where p.hotel_id=p_hotel),
   'legacy_rate',(select commission_rate from waki_private.hotel_finance_settings where hotel_id=p_hotel),
-  'charges',coalesce((select jsonb_agg(to_jsonb(c) order by c.period_start desc)
+  'charges',coalesce((select jsonb_agg(to_jsonb(invoice_row) order by invoice_row.period_start desc)
     from (select id,period_start,period_end,due_on,amount,status,paid_on,payment_reference,waiver_reason
      from waki_private.hotel_subscription_charges where hotel_id=p_hotel
-     order by period_start desc limit 36)c),'[]'::jsonb),
+     order by period_start desc limit 36)invoice_row),'[]'::jsonb),
   'events',coalesce((select jsonb_agg(to_jsonb(e) order by e.created_at desc)
     from (select old_plan,new_plan,old_rate,new_rate,old_fee,new_fee,reason,created_at
     from waki_private.hotel_plan_events where hotel_id=p_hotel order by created_at desc limit 15)e),'[]'::jsonb));
