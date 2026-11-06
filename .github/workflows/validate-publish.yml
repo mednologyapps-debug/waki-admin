@@ -21,6 +21,7 @@ jobs:
       - run: npm ci
       - run: npm run test:admin
       - run: npm run test:finance
+      - run: npm run test:commercial
       - run: npm run test:payout
       - run: npm run test:launch
       - run: npm run lint
