@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Check, Copy, Mail, Plus, Send, X } from 'lucide-react'
+import { Check, Copy, Mail, Send, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import './QuickHotelInvitation.css'
 
