@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { AdminPage, Feedback } from "../components/admin/AdminUI";
 import { useAdminQuery } from "../lib/useAdminQuery";
 import { money } from "../lib/finance";
+import { CutoffReminder } from "./SettlementCutoffsPage";
 export default function DashboardPage() {
   const q = useAdminQuery("overview");
   const d = q.data || {};
@@ -16,6 +17,7 @@ export default function DashboardPage() {
       }
     >
       <Feedback error={q.error} />
+      <CutoffReminder short />
       <div className="control-metrics">
         {[
           ["Hoteles", d.hotels, "/hoteles"],
@@ -70,10 +72,10 @@ export default function DashboardPage() {
         <section className="control-card">
           <h2>Finanzas con control</h2>
           <p>
-            Configura comisiones de 4% u 8%, concilia cobros y registra
-            depósitos sin duplicarlos.
+            Revisa los planes 8% + S/99 o 12% sin cuota, concilia
+            cobros y registra depósitos con trazabilidad.
           </p>
-          <Link to="/finanzas">Abrir liquidaciones</Link>
+          <Link to="/cortes">Revisar cortes y mensualidades</Link>
         </section>
         <section className="control-card">
           <h2>Accesos y auditoría</h2>
