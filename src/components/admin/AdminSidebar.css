@@ -8,13 +8,22 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Keep keyboard, touch and wheel scrolling but hide the browser's gray track. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   box-sizing: border-box;
   background-color: #7355e8;
   background-repeat: no-repeat;
   background-position: left bottom;
   background-size: cover;
   color: #fff;
+}
+.admin-canonical-sidebar::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 .admin-canonical-brand {
   height: 55px;
@@ -89,8 +98,8 @@
   font-weight: 600;
 }
 .admin-canonical-bottom {
-  margin-top: 90px;
-  padding-top: 24px;
+  margin-top: 32px;
+  padding-top: 20px;
 }
 .admin-canonical-bottom > strong {
   display: block;
