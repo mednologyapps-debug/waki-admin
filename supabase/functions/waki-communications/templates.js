@@ -7,7 +7,7 @@ export function communicationTemplate(row){
   const representative=String(p.representative_name||'').trim();
   // Token URL is generated server-side only, never from user form fields.
   const link=String(p.invitation_url||'');
-  if(!/^https:\/\/ventas\.wakipe\.com\/hotel\/invitacion\/[0-9a-f-]{36}$/.test(link)){
+  if(!/^https:\/\/(?:hotel\.wakipe\.com\/invitacion|ventas\.wakipe\.com\/hotel\/invitacion)\/[0-9a-f-]{36}$/.test(link)){
     throw new Error('INVALID_HOTEL_INVITE_URL');
   }
   const text=['Hola'+(representative?' '+representative:'' )+',',
