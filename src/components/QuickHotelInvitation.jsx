@@ -90,7 +90,7 @@ export default function QuickHotelInvitationDialog({ onClose, onCreated }) {
           <h2 id="waki-quick-title">Invitación preparada</h2>
           <p>Registramos la invitación de <strong>{form.hotel.trim()}</strong> para <strong>{result.contact_email}</strong>.</p>
           <div className="waki-quick-modal__note">
-            El correo se encuentra en cola para Mailjet. El responsable podrá crear su acceso y completar los datos de su hotel. No se publicará hasta que WAKI lo apruebe.
+            WAKI solicitó el envío inmediato del correo mediante Mailjet. El responsable podrá registrar su acceso; el hotel no se publicará hasta su aprobación.
           </div>
           <div className="waki-quick-modal__actions">
             <button type="button" className="waki-quick-secondary" onClick={copyInvitation}>
@@ -130,7 +130,7 @@ export default function QuickHotelInvitationDialog({ onClose, onCreated }) {
 }
 
 const deliveryLabels = {
-  pending: 'En cola', sending: 'Procesando', unconfigured: 'Sin configurar',
+  pending: 'Envío solicitado', sending: 'Contactando Mailjet', unconfigured: 'Sin configurar',
   sent: 'Aceptado por Mailjet', failed: 'Error de envío',
   unknown: 'Revisar envío', skipped: 'No enviado'
 }
@@ -141,7 +141,8 @@ export function QuickHotelInvitationList({ refreshKey = 0 }) {
 
   useEffect(() => {
     let active = true
-    supabase.rpc('list_quick_hotel_invitations', { p_limit: 12 }).then(({ data, error: failure }) => {
+    async function refresh() {
+      const { data, error: failure } = await supabase.rpc('list_quick_hotel_invitations', { p_limit: 12 })
       if (!active) return
       if (failure) {
         setError('No se pudieron consultar las invitaciones recientes.')
@@ -153,8 +154,15 @@ export function QuickHotelInvitationList({ refreshKey = 0 }) {
         ...invite,
         is_expired: invite.status === 'pending' && Date.parse(invite.expires_at) < now
       })) : [])
-    })
-    return () => { active = false }
+    }
+    void refresh()
+    // Only after creating an invitation, refresh once more to surface the
+    // Mailjet receipt without constant polling or extra network traffic.
+    const followUp = refreshKey > 0 ? window.setTimeout(() => { void refresh() }, 4000) : null
+    return () => {
+      active = false
+      if (followUp !== null) window.clearTimeout(followUp)
+    }
   }, [refreshKey])
 
   if (!invites.length && !error) return null
