@@ -3,6 +3,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.114.0";
 import nodemailer from "npm:nodemailer@10.1.1";
 import { payoutPdf, payoutHtml } from "./payoutDocument.js";
+import { sendMailjetPayout } from "./mailjet-payout.js";
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -74,15 +75,17 @@ Deno.serve(async (req) => {
     try {
       const r = claim.payload,
         email = String(claim.recipient || "").trim();
-      const resend = Deno.env.get("RESEND_API_KEY"),
+      const mailjetKey = Deno.env.get("MAILJET_API_KEY"),
+        mailjetSecret = Deno.env.get("MAILJET_SECRET_KEY"),
+        resend = Deno.env.get("RESEND_API_KEY"),
         smtpHost = Deno.env.get("SMTP_HOST"),
         smtpUser = Deno.env.get("SMTP_USER"),
         smtpPass = Deno.env.get("SMTP_PASS"),
-        from = Deno.env.get("PAYOUT_FROM_EMAIL") || "WAKI <hola@wakipe.com>";
+        from = Deno.env.get("PAYOUT_FROM_EMAIL") || Deno.env.get("WAKI_FROM_EMAIL") || "WAKI <hola@wakipe.com>";
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         state = "failed";
         errorCode = "HOTEL_EMAIL_MISSING";
-      } else if (!resend && !(smtpHost && smtpUser && smtpPass)) {
+      } else if (!(mailjetKey && mailjetSecret) && !resend && !(smtpHost && smtpUser && smtpPass)) {
         state = "unconfigured";
         errorCode = "MAIL_NOT_CONFIGURED";
       } else {
@@ -93,7 +96,25 @@ Deno.serve(async (req) => {
             r.paid_on +
             " · S/ " +
             Number(r.amount).toFixed(2);
-        if (resend) {
+        if (mailjetKey && mailjetSecret) {
+          const outcome = await sendMailjetPayout({
+            apiKey: mailjetKey,
+            secretKey: mailjetSecret,
+            recipient: email,
+            subject,
+            text: "Tu liquidación WAKI: S/ " + Number(r.amount).toFixed(2) +
+              ". Operación: " + r.reference + ". Se adjunta el resumen PDF.",
+            html: payoutHtml(r),
+            filename,
+            attachmentBase64: base64(bytes),
+            fromAddress: from,
+            fromName: Deno.env.get("WAKI_FROM_NAME") || "WAKI",
+            payoutId: payout_id,
+          });
+          state = outcome.state;
+          errorCode = outcome.error_code;
+          messageId = outcome.message_id;
+        } else if (resend) {
           const response = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: {
