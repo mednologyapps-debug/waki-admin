@@ -51,10 +51,10 @@ try{
  await assert.rejects(control("assign",{code:"flexible",reason:"no"}),/CHANGE_REASON_REQUIRED/);
  await control("assign",{code:"flexible",reason:"Acuerdo renovado"});
  info=await control("read");
- assert.equal(info.plan.commission_rate,12);
+ assert.equal(Number(info.plan.commission_rate),12);
  assert.equal(info.charges[0].status,"paid");
  const current=(await db.query("select commission_rate from waki_private.hotel_finance_settings where hotel_id=$1",[hotel])).rows[0].commission_rate;
- assert.equal(current,12);
+ assert.equal(Number(current),12);
  await assert.rejects(db.query("select waki_private.finance_action($1,$2)",["commission",JSON.stringify({hotel_id:hotel,rate:4})]),/PLAN_MANAGED/);
  await db.query("select set_config('request.jwt.claim.sub','',false)");
  await assert.rejects(db.query("select public.admin_hotel_commercial_plan($1)",[hotel]),/NOT_AUTHORIZED/);
