@@ -95,7 +95,7 @@ export default function SettlementCutoffsPage() {
   const attentionCount = hotels.filter(needsAction).length;
   const pendingPayouts = hotels.filter(h => Number(h.hotel_net) > 0).length;
   const pendingSubscriptions = hotels.filter(h => Number(h.subscription_due) > 0 || h.needs_invoice).length;
-  const rows = useMemo(() => hotels.filter(hotel => {
+  const rows = useMemo(() => (data?.rows || []).filter(hotel => {
     const query = search.trim().toLocaleLowerCase("es-PE");
     if (query && ![hotel.name, hotel.district].some(field =>
       String(field || "").toLocaleLowerCase("es-PE").includes(query))) return false;
@@ -104,7 +104,7 @@ export default function SettlementCutoffsPage() {
     if (filter === "subscriptions")
       return Number(hotel.subscription_due) > 0 || hotel.needs_invoice;
     return true;
-  }), [hotels, search, filter]);
+  }), [data, search, filter]);
 
   async function generate() {
     if (busy) return;
@@ -235,7 +235,6 @@ export default function SettlementCutoffsPage() {
           </div>
           <div className="waki-cutoff-panel-footer">
             <span>{rows.length} de {hotels.length} hoteles</span>
-            <span>Las transferencias se confirman en Ventas y liquidaciones.</span>
           </div>
         </div>
       </section>
