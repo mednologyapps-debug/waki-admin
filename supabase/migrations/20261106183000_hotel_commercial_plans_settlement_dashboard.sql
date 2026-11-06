@@ -252,3 +252,84 @@ end $$;
 
 -- Existing transactions retain their original commission_rate. Updated finance_action below
 -- accepts 12% for new operations and forbids direct commission edits for plan-managed hotels.
+
+
+create or replace function waki_private.finance_action(p_action text,p_data jsonb)
+returns jsonb language plpgsql security definer set search_path='' as $$
+declare h uuid:=(p_data->>'hotel_id')::uuid;s waki_private.hotel_sales;rate numeric;v_id uuid;
+amount numeric;token text;v_count integer;previous_rate numeric;ref text;v_day date;
+begin
+ if auth.uid() is null or not coalesce(public.is_waki_admin(),false)
+  then raise exception 'NOT_AUTHORIZED' using errcode='42501';end if;
+ if h is null or not exists(select 1 from public.hotels where id=h)
+  then raise exception 'HOTEL_NOT_FOUND';end if;
+ perform pg_advisory_xact_lock(hashtextextended(h::text,0));
+ if p_action='commission' then
+  if exists(select 1 from waki_private.hotel_commercial_plans where hotel_id=h)
+   then raise exception 'PLAN_MANAGED';end if;
+  rate:=(p_data->>'rate')::numeric;
+  if rate is null or rate not in (4,8,12) then raise exception 'INVALID_RATE';end if;
+  select commission_rate into previous_rate from waki_private.hotel_finance_settings where hotel_id=h;
+  insert into waki_private.hotel_finance_settings(hotel_id,commission_rate,updated_by) values(h,rate,auth.uid())
+   on conflict(hotel_id) do update set commission_rate=excluded.commission_rate,updated_at=now(),updated_by=auth.uid();
+  insert into waki_private.hotel_finance_audit(hotel_id,action,actor,details)
+   values(h,p_action,auth.uid(),jsonb_build_object('before',previous_rate,'after',rate));
+  return jsonb_build_object('ok',true);
+ elsif p_action='reconcile' then
+  select * into s from waki_private.hotel_sales where id=(p_data->>'sale_id')::uuid and hotel_id=h for update;
+  if s.id is null or s.is_test or s.payout_id is not null or s.hold_reason is not null
+    or s.currency<>'PEN' or s.verified_at is not null
+   then raise exception 'SALE_NOT_RECONCILABLE';end if;
+  rate:=coalesce(s.commission_rate,(select commission_rate from waki_private.hotel_finance_settings where hotel_id=h));
+  ref:=trim(p_data->>'reference');
+  if rate is null or rate not in (4,8,12) or ref is null or length(ref)<3 or length(ref)>120
+    then raise exception 'INVALID_RECONCILIATION';end if;
+  update waki_private.hotel_sales set commission_rate=rate,verified_at=now(),verified_by=auth.uid(),receipt_reference=ref where id=s.id;
+  insert into waki_private.hotel_finance_audit(hotel_id,action,actor,details)
+   values(h,p_action,auth.uid(),jsonb_build_object('sale_id',s.id,'rate',rate,'reference',ref));
+  return jsonb_build_object('ok',true);
+ elsif p_action='payout' then
+  ref:=trim(p_data->>'reference');v_day:=(p_data->>'paid_on')::date;
+  if ref is null or length(ref)<3 or length(ref)>120 or v_day is null
+   or v_day>(now() at time zone 'America/Lima')::date or length(coalesce(p_data->>'notes',''))>1000
+   then raise exception 'INVALID_PAYOUT';end if;
+  if exists(select 1 from waki_private.hotel_payouts where hotel_id=h and reference=ref)
+   then raise exception 'DUPLICATE_REFERENCE';end if;
+  if not exists(select 1 from waki_private.hotel_affiliation_dossiers
+   where hotel_id=h and bank_verified_at is not null and contract_verified_at is not null)
+   then raise exception 'BANK_DOSSIER_REQUIRED';end if;
+  -- Recompute inside a row lock; browser totals are never authoritative.
+  perform id from waki_private.hotel_sales where hotel_id=h order by id for update;
+  select count(*),sum(net),md5(coalesce(string_agg(id::text||':'||net::text,',' order by id),''))
+  into v_count,amount,token from waki_private.hotel_sales_status where hotel_id=h and finance_status='pending'
+   and (nullif(p_data->>'from','') is null or paid_at>=(p_data->>'from')::date::timestamp at time zone 'America/Lima')
+   and (nullif(p_data->>'to','') is null or paid_at<((p_data->>'to')::date+1)::timestamp at time zone 'America/Lima');
+  if v_count=0 or amount<=0 then raise exception 'NO_PENDING_SALES';end if;
+  if token is distinct from p_data->>'token' or amount is distinct from (p_data->>'amount')::numeric
+    then raise exception 'BALANCE_CHANGED';end if;
+  insert into waki_private.hotel_payouts(hotel_id,amount,reference,paid_on,notes,created_by)
+   values(h,amount,ref,v_day,coalesce(p_data->>'notes',''),auth.uid()) returning id into v_id;
+  update waki_private.hotel_sales set payout_id=v_id
+   where id in(select id from waki_private.hotel_sales_status
+    where hotel_id=h and finance_status='pending'
+    and (nullif(p_data->>'from','') is null or paid_at>=(p_data->>'from')::date::timestamp at time zone 'America/Lima')
+    and (nullif(p_data->>'to','') is null or paid_at<((p_data->>'to')::date+1)::timestamp at time zone 'America/Lima'));
+  insert into waki_private.hotel_finance_audit(hotel_id,action,actor,details)
+    values(h,p_action,auth.uid(),jsonb_build_object('payout_id',v_id,'amount',amount,'sales_count',v_count));
+  return jsonb_build_object('ok',true,'payout_id',v_id,'amount',amount);
+ end if;
+ raise exception 'INVALID_ACTION';
+end $$;
+
+-- Private helpers are not exposed through Data API.
+revoke all on function waki_private.plan_cycle_date(date,integer),
+waki_private.generate_subscription_charges(),
+waki_private.assign_commercial_plan(uuid,text,text) from public,anon,authenticated;
+
+-- Only signed-in global administrators may invoke the public RPCs (also checked inside each RPC).
+revoke all on function public.admin_hotel_commercial_plan(uuid,text,jsonb) from public,anon,authenticated;
+grant execute on function public.admin_hotel_commercial_plan(uuid,text,jsonb) to authenticated;
+revoke all on function public.admin_settlement_cutoff() from public,anon,authenticated;
+grant execute on function public.admin_settlement_cutoff() to authenticated;
+revoke all on function public.admin_generate_subscription_charges() from public,anon,authenticated;
+grant execute on function public.admin_generate_subscription_charges() to authenticated;
