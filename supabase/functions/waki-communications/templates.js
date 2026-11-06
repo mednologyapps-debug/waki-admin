@@ -10,7 +10,6 @@ export function communicationTemplate(row){
   if(!/^https:\/\/ventas\.wakipe\.com\/hotel\/invitacion\/[0-9a-f-]{36}$/.test(link)){
     throw new Error('INVALID_HOTEL_INVITE_URL');
   }
-  const title='Te invitamos a registrar tu hotel en WAKI';
   const text=['Hola'+(representative?' '+representative:'' )+',',
     'Tienes una invitación para registrar '+name+' en WAKI Hotel.',
     'Activa tu acceso desde este enlace (válido durante 14 días): '+link,
