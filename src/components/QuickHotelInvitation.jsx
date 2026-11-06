@@ -148,7 +148,11 @@ export function QuickHotelInvitationList({ refreshKey = 0 }) {
         return
       }
       setError('')
-      setInvites(Array.isArray(data) ? data : [])
+      const now = Date.now()
+      setInvites(Array.isArray(data) ? data.map(invite => ({
+        ...invite,
+        is_expired: invite.status === 'pending' && Date.parse(invite.expires_at) < now
+      })) : [])
     })
     return () => { active = false }
   }, [refreshKey])
@@ -164,7 +168,7 @@ export function QuickHotelInvitationList({ refreshKey = 0 }) {
       {error && <p className="waki-quick-error">{error}</p>}
       <div className="waki-quick-list__rows">
         {invites.map(invite => {
-          const expired = invite.status === 'pending' && Date.parse(invite.expires_at) < Date.now()
+          const expired = invite.is_expired
           const stage = invite.status === 'claimed' ? 'Hotel registrado' : expired ? 'Invitación vencida' : 'Pendiente de registro'
           return (
             <div className="waki-quick-list__row" key={invite.id}>
