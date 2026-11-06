@@ -84,7 +84,7 @@ export default function SettingsPage() {
                   <td>
                     <Link className="control-btn" to={"/hoteles/"+h.id+"/detalle"}>
                       Ver y gestionar plan
-                    </Link>           </button>
+                    </Link>
                   </td>
                 </tr>
               ))}
