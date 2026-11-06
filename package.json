@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test:finance": "node tests/finance.test.mjs",
+    "test:commercial": "node tests/commercial-plans.test.mjs",
     "test:admin": "node tests/admin-control.test.mjs",
     "test:payout": "node tests/payout-document.test.mjs",
     "test:launch": "node tests/launch-security.test.mjs && node tests/launch-operations.test.mjs && node tests/account-deletion-finance.test.mjs && node tests/communication-templates.test.mjs"
