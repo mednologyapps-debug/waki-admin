@@ -134,7 +134,7 @@ export default function SettlementCutoffsPage() {
   }
 
   return (
-    <AdminPage title="Cortes y liquidaciones">
+    <AdminPage title="Cortes y liquidaciones" pageClassName="waki-cutoff-main">
       <Feedback error={error} notice={notice} />
       <section className="waki-cutoff-workspace" aria-label="Control de cortes">
         <div className="waki-cutoff-toolbar">
