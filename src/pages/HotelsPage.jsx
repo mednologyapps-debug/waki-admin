@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 import AdminSidebar from '../components/admin/AdminSidebar'
+import QuickHotelInvitationDialog, { QuickHotelInvitationList } from '../components/QuickHotelInvitation'
 
 function Icon({
   type,
@@ -94,6 +95,8 @@ function HotelsPage() {
   const [errorMessage, setErrorMessage] = useState('')
   const [activeFilter, setActiveFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const [invitesVersion, setInvitesVersion] = useState(0)
 
   useEffect(() => {
     let mounted = true
@@ -359,24 +362,33 @@ function HotelsPage() {
             </p>
           </div>
 
-          <button
-            className="hotels-add-button"
-            onClick={() =>
-              navigate(
-                '/hoteles/nuevo'
-              )
-            }
-          >
-            <Icon
-              type="plus"
-              size={18}
-            />
-
-            <span>
-              Agregar hotel
-            </span>
-          </button>
+          <div className="waki-hotels-header-actions">
+            <button
+              type="button"
+              className="hotels-add-button hotels-add-button--secondary"
+              onClick={() => navigate('/hoteles/nuevo')}
+            >
+              Registro manual
+            </button>
+            <button
+              type="button"
+              className="hotels-add-button"
+              onClick={() => setInviteOpen(true)}
+            >
+              <Icon type="plus" size={18} />
+              <span>Agregar hotel</span>
+            </button>
+          </div>
         </header>
+
+        {inviteOpen && (
+          <QuickHotelInvitationDialog
+            onClose={() => setInviteOpen(false)}
+            onCreated={() => setInvitesVersion(v => v + 1)}
+          />
+        )}
+
+        <QuickHotelInvitationList refreshKey={invitesVersion} />
 
         {/* =========================
             RESUMEN
