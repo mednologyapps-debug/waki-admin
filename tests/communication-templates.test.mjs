@@ -37,3 +37,26 @@ assert.equal(transient.state,'unknown');
 const malformed = await send(async()=>Response.json({foo:'bar'}));
 assert.equal(malformed.state,'unknown');
 console.log('Mailjet API: payload, HTTP Basic auth, provider receipt, errors and unknown states passed.');
+
+import { sendMailjetPayout } from '../supabase/functions/admin-payout/mailjet-payout.js';
+const payout = {
+ apiKey:'public-test-key',secretKey:'private-test-key',
+ recipient:'hotel@example.com',subject:'Liquidación de prueba',text:'Comprobante',
+ html:'<p>Comprobante</p>',filename:'test.pdf',attachmentBase64:'UERG',
+ fromAddress:'WAKI <notificaciones@wakipe.com>',payoutId:'cccccccc-cccc-cccc-cccc-cccccccccccc'
+};
+const payoutResult = await sendMailjetPayout({...payout,fetcher:async(url,opts)=>{
+ assert.equal(url,'https://api.mailjet.com/v3.1/send');
+ const m=JSON.parse(opts.body).Messages[0];
+ assert.equal(m.From.Email,'notificaciones@wakipe.com');
+ assert.equal(m.To[0].Email,'hotel@example.com');
+ assert.equal(m.Attachments[0].ContentType,'application/pdf');
+ assert.equal(m.Attachments[0].Base64Content,'UERG');
+ assert.equal(m.CustomID,'waki-payout-'+payout.payoutId);
+ return Response.json({Messages:[{Status:'success',To:[{MessageUUID:'payout-uuid'}]}]});
+}});
+assert.equal(payoutResult.state,'sent');
+assert.equal(payoutResult.message_id,'payout-uuid');
+const payoutUnauthorized=await sendMailjetPayout({...payout,fetcher:async()=>Response.json({ErrorMessage:'Unauthorized'},{status:401})});
+assert.equal(payoutUnauthorized.state,'failed');
+console.log('Mailjet payout PDF: formatted attachment, sender and provider receipt passed.');
