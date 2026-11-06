@@ -35,9 +35,9 @@ function Metric({ label, value, hint }) {
 export default function FinancePage() {
   const [filter, setFilter] = useState({
       from: "",
-      to: "",
-      search: "",
-      status: "pending",
+      to: new URLSearchParams(window.location.search).get("hasta") || "",
+      search: new URLSearchParams(window.location.search).get("buscar") || "",
+      status: new URLSearchParams(window.location.search).has("buscar") ? "all" : "pending",
       page: 0,
     }),
     [data, setData] = useState(null),
@@ -327,6 +327,7 @@ export default function FinancePage() {
         <form className="control-filters" onSubmit={apply}>
           <input
             name="search"
+            defaultValue={filter.search}
             placeholder="Buscar hotel o distrito"
             aria-label="Hotel o distrito"
           />
@@ -336,7 +337,7 @@ export default function FinancePage() {
           </label>
           <label>
             Hasta
-            <input type="date" name="to" />
+            <input type="date" name="to" defaultValue={filter.to} />
           </label>
           <button className="control-btn primary">Filtrar</button>
         </form>

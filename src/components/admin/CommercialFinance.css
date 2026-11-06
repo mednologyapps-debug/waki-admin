@@ -1,0 +1,34 @@
+.waki-plan-card{background:#fff;border:1px solid #e8e0f4;border-radius:18px;padding:22px;margin:20px 0;color:#302a3c}
+.waki-plan-header,.waki-plan-subheading{display:flex;align-items:start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.waki-plan-header h2{font-size:20px;margin:3px 0}.waki-plan-header p,.waki-plan-note{font-size:13px;color:#746a84;line-height:1.6}
+.waki-plan-eyebrow{font-size:11px;letter-spacing:.09em;color:#7137e8;font-weight:800}
+.waki-plan-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
+.waki-plan-stats article{display:grid;gap:10px;padding:16px;background:#faf8ff;border:1px solid #f0eafa;border-radius:12px}
+.waki-plan-stats span{font-size:12px;color:#746a84}.waki-plan-stats strong{font-size:18px;overflow-wrap:anywhere}
+.waki-plan-edit,.waki-plan-charge{display:grid;gap:14px;margin:12px 0 20px;padding:17px;background:#f9f7fe;border:1px solid #e5dcf2;border-radius:12px}
+.waki-plan-edit label,.waki-plan-charge label{font-size:13px;font-weight:700;display:grid;gap:7px}
+.waki-plan-edit select,.waki-plan-edit textarea,.waki-plan-charge input,.waki-plan-charge textarea{border:1px solid #dcd5e9;border-radius:9px;padding:11px;font:inherit;max-width:100%;background:#fff}
+.waki-plan-edit p{font-size:12px;color:#746a84;line-height:1.5}.waki-plan-subheading h3{margin:6px 0;font-size:16px}
+.waki-plan-subheading span{font-size:12px;color:#7137e8;background:#f2ebff;padding:8px 10px;border-radius:999px}
+.waki-plan-table{width:100%;border-collapse:collapse;font-size:13px}.waki-plan-table th,.waki-plan-table td{padding:12px;text-align:left;border-bottom:1px solid #eee9f4}
+.waki-plan-table th{color:#6a617b;font-weight:700;background:#faf9fc}.waki-plan-table td small{display:block;color:#756c86}
+.waki-plan-warning{padding:12px;background:#fff7e7;border-radius:9px;color:#74521e;font-size:13px}
+.waki-plan-history{margin-top:16px;font-size:13px}.waki-plan-history summary{font-weight:700;cursor:pointer}
+.waki-plan-link{border:0;background:transparent;padding:0;text-decoration:underline;text-align:left;cursor:pointer;color:#7137e8}
+.waki-cutoff-banner{padding:18px 20px;margin:0 0 18px;border-radius:16px;border:1px solid #ded4ef;background:#fbf9ff;display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.waki-cutoff-banner.is-due{background:#fffaf1;border-color:#eed8a1}
+.waki-cutoff-banner h2{font-size:17px;margin:0 0 6px}.waki-cutoff-banner p{font-size:13px;max-width:760px;margin:0;line-height:1.5;color:#63586f}
+.waki-cutoff-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0}
+.waki-cutoff-cards article{padding:18px;background:#fff;border:1px solid #e8e0f4;border-radius:14px;display:grid;gap:7px}
+.waki-cutoff-cards span{font-size:12px;color:#776d85}.waki-cutoff-cards strong{font-size:23px;font-variant-numeric:tabular-nums}.waki-cutoff-cards small{font-size:11px;color:#746b80}
+.waki-cutoff-table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:13px}
+.waki-cutoff-table th{color:#746b80;font-weight:700;text-align:left;background:#faf8ff}
+.waki-cutoff-table th,.waki-cutoff-table td{padding:14px;border-bottom:1px solid #eee9f4}
+.waki-cutoff-table td strong{display:block}.waki-cutoff-table small{display:block;color:#746b80;margin-top:4px}
+.waki-cutoff-table .waki-positive{font-weight:800;color:#6328b8}.waki-cutoff-actions{display:flex;gap:8px;flex-wrap:wrap}
+.waki-cutoff-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;margin:18px 0}
+.waki-cutoff-controls label{font-size:13px;display:flex;align-items:center;gap:8px}
+.waki-cutoff-controls select{font:inherit;max-width:100%;padding:10px;border:1px solid #ddd1ef;border-radius:10px;background:#fff}
+.waki-cutoff-help{color:#6e647a;font-size:13px;line-height:1.6}
+@media(max-width:900px){.waki-plan-stats,.waki-cutoff-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:530px){.waki-plan-card{padding:14px}.waki-plan-stats,.waki-cutoff-cards{grid-template-columns:1fr}.waki-cutoff-banner{padding:14px}}

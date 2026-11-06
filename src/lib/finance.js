@@ -38,8 +38,12 @@ const errors = {
   NO_PENDING_SALES: "No hay ventas pendientes de depositar en este periodo.",
   SALE_NOT_RECONCILABLE:
     "Esta venta ya cambió de estado o requiere una revisión especial.",
+  PLAN_MANAGED:
+    "La comisión se administra desde el plan del hotel. Edita su acuerdo comercial en la ficha.",
+  BANK_DOSSIER_REQUIRED:
+    "Debes verificar primero el contrato y los datos bancarios del hotel antes de registrar un depósito.",
   INVALID_RATE:
-    "Selecciona una comisión de 4% u 8%.",
+    "Selecciona una comisión permitida para el hotel.",
   INVALID_RECONCILIATION: "Revisa la comisión y la referencia del cobro.",
   INVALID_PAYOUT: "Revisa la referencia, la fecha y las notas del depósito.",
   INVALID_DATES: "La fecha inicial debe ser anterior o igual a la final.",

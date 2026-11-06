@@ -26,6 +26,7 @@ const links = [
   ["/reservas", "Reservas", CalendarDays],
   ["/usuarios", "Usuarios", UsersRound],
   ["/finanzas", "Ventas y liquidaciones", CircleDollarSign],
+  ["/cortes", "Centro de cortes", CalendarDays],
   ["/analitica", "Analítica de negocio", ChartNoAxesCombined],
   ["/monitoreo", "Monitoreo y correos", Activity],
   ["/reclamos", "Reclamaciones", MessageSquare],

@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import FinancePage from "./pages/FinancePage";
+import SettlementCutoffsPage from "./pages/SettlementCutoffsPage";
 import HotelsPage from "./pages/HotelsPage";
 import NewHotelPage from "./pages/NewHotelPage";
 import HotelLocationPage from "./pages/HotelLocationPage";
@@ -64,6 +65,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/cortes" element={<ProtectedRoute><SettlementCutoffsPage /></ProtectedRoute>} />
       <Route
         path="/finanzas"
         element={
