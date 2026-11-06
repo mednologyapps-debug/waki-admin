@@ -18,17 +18,335 @@
 .waki-cutoff-banner{padding:18px 20px;margin:0 0 18px;border-radius:16px;border:1px solid #ded4ef;background:#fbf9ff;display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .waki-cutoff-banner.is-due{background:#fffaf1;border-color:#eed8a1}
 .waki-cutoff-banner h2{font-size:17px;margin:0 0 6px}.waki-cutoff-banner p{font-size:13px;max-width:760px;margin:0;line-height:1.5;color:#63586f}
-.waki-cutoff-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:18px 0}
-.waki-cutoff-cards article{padding:18px;background:#fff;border:1px solid #e8e0f4;border-radius:14px;display:grid;gap:7px}
-.waki-cutoff-cards span{font-size:12px;color:#776d85}.waki-cutoff-cards strong{font-size:23px;font-variant-numeric:tabular-nums}.waki-cutoff-cards small{font-size:11px;color:#746b80}
-.waki-cutoff-table{width:100%;border-collapse:collapse;white-space:nowrap;font-size:13px}
-.waki-cutoff-table th{color:#746b80;font-weight:700;text-align:left;background:#faf8ff}
-.waki-cutoff-table th,.waki-cutoff-table td{padding:14px;border-bottom:1px solid #eee9f4}
-.waki-cutoff-table td strong{display:block}.waki-cutoff-table small{display:block;color:#746b80;margin-top:4px}
-.waki-cutoff-table .waki-positive{font-weight:800;color:#6328b8}.waki-cutoff-actions{display:flex;gap:8px;flex-wrap:wrap}
-.waki-cutoff-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;margin:18px 0}
-.waki-cutoff-controls label{font-size:13px;display:flex;align-items:center;gap:8px}
-.waki-cutoff-controls select{font:inherit;max-width:100%;padding:10px;border:1px solid #ddd1ef;border-radius:10px;background:#fff}
-.waki-cutoff-help{color:#6e647a;font-size:13px;line-height:1.6}
-@media(max-width:900px){.waki-plan-stats,.waki-cutoff-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:530px){.waki-plan-card{padding:14px}.waki-plan-stats,.waki-cutoff-cards{grid-template-columns:1fr}.waki-cutoff-banner{padding:14px}}
+
+/* Compact settlement center: hotel list first, no dashboard cards. */
+.control-main.waki-cutoff-main {
+  padding: 27px clamp(18px, 2.8vw, 42px) 42px;
+}
+.waki-cutoff-main .control-header {
+  margin-bottom: 17px;
+}
+.waki-cutoff-main .control-header h1 {
+  font-size: clamp(24px, 2.1vw, 30px);
+  letter-spacing: -0.7px;
+  margin: 6px 0 0;
+}
+.waki-cutoff-workspace {
+  min-width: 0;
+}
+.waki-cutoff-toolbar,
+.waki-cutoff-toolbar-label,
+.waki-cutoff-toolbar-actions,
+.waki-cutoff-panel-head,
+.waki-cutoff-panel-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.waki-cutoff-toolbar {
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 5px 0 16px;
+  border-bottom: 1px solid #e7e2ee;
+}
+.waki-cutoff-toolbar-label {
+  gap: 10px;
+  min-width: 0;
+}
+.waki-cutoff-toolbar-actions {
+  gap: 8px;
+}
+.waki-cutoff-toolbar-actions .control-btn {
+  gap: 7px;
+}
+.waki-cutoff-date {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: #342b4c;
+  font-size: 13px;
+  font-weight: 750;
+}
+.waki-cutoff-date svg {color: #7137e8;}
+.waki-cutoff-through {
+  font-size: 12px;
+  color: #82798e;
+}
+.waki-cutoff-today {
+  font-size: 11px;
+  font-weight: 750;
+  color: #6c32c5;
+  background: #eee8fb;
+  border-radius: 8px;
+  padding: 4px 8px;
+}
+.waki-cutoff-panel {
+  min-width: 0;
+  overflow: hidden;
+  background: white;
+  border: 1px solid #e8e4ef;
+  border-radius: 15px;
+  box-shadow: 0 4px 22px rgba(45, 28, 89, 0.025);
+}
+.waki-cutoff-panel-head {
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 17px;
+}
+.waki-cutoff-panel-title h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -0.3px;
+  color: #2c243d;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+.waki-cutoff-panel-title h2 span {
+  display: inline-flex;
+  min-width: 25px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  background: #f2eff8;
+  color: #6c5c84;
+  padding: 3px 6px;
+  font-weight: 700;
+  font-size: 11px;
+}
+.waki-cutoff-panel-tools {
+  gap: 9px;
+  flex: 1;
+  justify-content: flex-end;
+}
+.waki-cutoff-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 210px;
+  max-width: 280px;
+  flex: 1 1 210px;
+}
+.waki-cutoff-search svg {
+  position: absolute;
+  left: 12px;
+  color: #9186a1;
+  pointer-events: none;
+}
+.waki-cutoff-search input,
+.waki-cutoff-filter select {
+  font: inherit;
+  min-height: 39px;
+  border: 1px solid #e5e0ec;
+  border-radius: 9px;
+  color: #352d45;
+  background: #fff;
+  font-size: 12px;
+  width: 100%;
+}
+.waki-cutoff-search input {
+  padding: 8px 11px 8px 36px;
+}
+.waki-cutoff-search input::placeholder {
+  color: #9b92a7;
+}
+.waki-cutoff-filter select {
+  min-width: 174px;
+  max-width: 100%;
+  padding: 8px 31px 8px 11px;
+  cursor: pointer;
+}
+.waki-cutoff-search input:focus-visible,
+.waki-cutoff-filter select:focus-visible,
+.waki-cutoff-plan-link:focus-visible {
+  outline: 2px solid #9666ec;
+  outline-offset: 2px;
+}
+.waki-cutoff-export.control-btn {
+  min-height: 39px;
+  border-radius: 9px;
+  gap: 7px;
+  padding-inline: 12px;
+  font-size: 12px;
+}
+.waki-cutoff-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.waki-cutoff-table-compact {
+  width: 100%;
+  min-width: 1040px;
+  border-spacing: 0;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.waki-cutoff-table-compact th,
+.waki-cutoff-table-compact td {
+  padding: 12px 13px;
+  border-bottom: 1px solid #f0edf5;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.waki-cutoff-table-compact th {
+  font-size: 10px;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: #7e738e;
+  background: #faf9fc;
+  text-align: left;
+  border-top: 1px solid #f0edf5;
+}
+.waki-cutoff-table-compact tbody tr {
+  transition: background 0.15s ease;
+}
+.waki-cutoff-table-compact tbody tr:hover {
+  background: #faf8ff;
+}
+.waki-cutoff-table-compact tr:last-child td {
+  border-bottom: 0;
+}
+.waki-cutoff-table-compact td.waki-cutoff-number,
+.waki-cutoff-table-compact th.waki-cutoff-number,
+.waki-cutoff-table-compact .waki-cutoff-right {
+  text-align: right;
+}
+.waki-cutoff-hotel-cell {
+  min-width: 155px;
+}
+.waki-cutoff-hotel-cell strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 750;
+  color: #322844;
+}
+.waki-cutoff-hotel-cell small {
+  display: block;
+  font-size: 10px;
+  margin-top: 3px;
+  color: #898097;
+}
+.waki-cutoff-table-compact td.waki-cutoff-amount {
+  font-size: 13px;
+  font-weight: 800;
+  color: #622ac2;
+}
+.waki-cutoff-state {
+  display: inline-flex;
+  border-radius: 7px;
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 750;
+}
+.waki-cutoff-state.state-warning {
+  background: #fff5e5;
+  color: #92601b;
+}
+.waki-cutoff-state.state-accent {
+  background: #f0e9ff;
+  color: #6939b9;
+}
+.waki-cutoff-state.state-muted {
+  background: #f2f0f6;
+  color: #746981;
+}
+.waki-cutoff-state.state-ok {
+  background: #e9f7ef;
+  color: #26724b;
+}
+.waki-cutoff-actions-cell {
+  min-width: 185px;
+}
+.waki-cutoff-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.waki-cutoff-reconcile.control-btn {
+  border-radius: 8px;
+  min-height: 32px;
+  font-size: 11px;
+  padding: 5px 10px;
+  border-color: #e5d9f7;
+  color: #6137a4;
+  background: #f9f6ff;
+}
+.waki-cutoff-plan-link {
+  padding: 4px 0;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  border: 0;
+  background: transparent;
+  color: #645773;
+  cursor: pointer;
+}
+.waki-cutoff-plan-link:hover {
+  color: #642ac8;
+  text-decoration: underline;
+}
+.waki-cutoff-panel-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: #91879e;
+  padding: 10px 16px;
+  border-top: 1px solid #f0edf5;
+  background: #fff;
+}
+.waki-cutoff-empty {
+  text-align: center;
+  padding: 30px 16px !important;
+  font-size: 13px;
+  color: #81758f;
+}
+.waki-cutoff-filter .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 850px) {
+  .control-main.waki-cutoff-main {
+    padding: 22px 16px 32px;
+  }
+  .waki-cutoff-toolbar {
+    align-items: flex-start;
+  }
+  .waki-cutoff-panel-head {
+    align-items: stretch;
+  }
+  .waki-cutoff-panel-tools {
+    justify-content: flex-start;
+  }
+  .waki-cutoff-search {
+    max-width: unset;
+    flex-grow: 1;
+  }
+}
+@media (max-width: 530px) {
+  .waki-plan-card { padding: 14px; }
+  .waki-plan-stats { grid-template-columns: 1fr; }
+  .waki-cutoff-toolbar-actions,
+  .waki-cutoff-panel-tools { width: 100%; }
+  .waki-cutoff-toolbar-actions .control-btn { flex: 1; }
+  .waki-cutoff-search { min-width: 100%; }
+  .waki-cutoff-filter { flex: 1 1 auto; }
+  .waki-cutoff-filter select { min-width: 100%; }
+  .waki-cutoff-panel-footer span:last-child { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .waki-cutoff-table-compact tbody tr { transition: none; }
+}
