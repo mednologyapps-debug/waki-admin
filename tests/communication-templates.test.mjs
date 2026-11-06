@@ -60,3 +60,21 @@ assert.equal(payoutResult.message_id,'payout-uuid');
 const payoutUnauthorized=await sendMailjetPayout({...payout,fetcher:async()=>Response.json({ErrorMessage:'Unauthorized'},{status:401})});
 assert.equal(payoutUnauthorized.state,'failed');
 console.log('Mailjet payout PDF: formatted attachment, sender and provider receipt passed.');
+
+const token = '12345678-1234-1234-1234-123456789abc';
+const invite=communicationTemplate({kind:'hotel_invitation',audience:'hotel',payload:{
+ hotel_name:'Hotel <Test>',representative_name:'Eva <img src=x onerror=alert(1)>',
+ invitation_url:'https://ventas.wakipe.com/hotel/invitacion/'+token
+}});
+assert.ok(invite.subject.includes('WAKI Hotel'));
+assert.ok(invite.html.includes('waki-logo-email.png'));
+assert.ok(invite.html.includes('&lt;Test&gt;'));
+assert.ok(!invite.html.includes('<img src=x onerror=alert(1)>'));
+assert.ok(invite.html.includes('/hotel/invitacion/'+token));
+assert.ok(invite.text.includes('no se publicará'));
+assert.throws(()=>communicationTemplate({kind:'hotel_invitation',audience:'hotel',payload:{
+ hotel_name:'Hotel',representative_name:'Eva',invitation_url:'https://evil.example/bad'
+}}),/INVALID_HOTEL_INVITE_URL/);
+const inviteMailjet=mailjetPayload(row,invite,'notificaciones@wakipe.com');
+assert.ok(inviteMailjet.Messages[0].HTMLPart.includes('/hotel/invitacion/'));
+console.log('Quick hotel invitation: branded Spanish HTML, escaped user data and fixed authenticated invite URL passed.');
