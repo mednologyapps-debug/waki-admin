@@ -1,0 +1,4 @@
+# WAKI: cron calls waki-communications with an independent private scheduler token.
+# This Edge Function validates user sessions or scheduler tokens in its own handler.
+[functions.waki-communications]
+verify_jwt = false
