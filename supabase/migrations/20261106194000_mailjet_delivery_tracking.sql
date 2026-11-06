@@ -25,7 +25,7 @@ begin
    where id=(p_data->>'id')::uuid and lease=(p_data->>'lease')::uuid and state='sending';
   return jsonb_build_object('ok',found);
  end if;raise exception 'INVALID_ACTION';
-end $function$
+end $function$;
 
 
 CREATE OR REPLACE FUNCTION waki_private.launch_dashboard(p_from date, p_to date)
@@ -57,5 +57,4 @@ begin
  'communications',coalesce((select jsonb_agg(to_jsonb(m)) from (select id,kind,audience,state,error_code,provider,provider_message_id,created_at,sent_at from waki_private.communication_outbox order by created_at desc limit 25) m),'[]'),
  'payment_reviews',coalesce((select jsonb_agg(to_jsonb(r)) from (select a.id,a.reservation_id,h.name hotel_name,a.state,a.review_reason,a.created_at from waki_private.izipay_attempts a join public.reservations b on b.id=a.reservation_id join public.hotels h on h.id=b.hotel_id where a.state='review' order by a.created_at desc limit 25) r),'[]'),
  'collected_since',(select min(created_at) from waki_private.web_events));
-end $function$
-
+end $function$;
