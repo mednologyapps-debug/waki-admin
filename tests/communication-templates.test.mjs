@@ -64,17 +64,24 @@ console.log('Mailjet payout PDF: formatted attachment, sender and provider recei
 const token = '12345678-1234-1234-1234-123456789abc';
 const invite=communicationTemplate({kind:'hotel_invitation',audience:'hotel',payload:{
  hotel_name:'Hotel <Test>',representative_name:'Eva <img src=x onerror=alert(1)>',
- invitation_url:'https://ventas.wakipe.com/hotel/invitacion/'+token
+ invitation_url:'https://hotel.wakipe.com/invitacion/'+token
 }});
 assert.ok(invite.subject.includes('WAKI Hotel'));
 assert.ok(invite.html.includes('waki-logo-email.png'));
 assert.ok(invite.html.includes('&lt;Test&gt;'));
 assert.ok(!invite.html.includes('<img src=x onerror=alert(1)>'));
-assert.ok(invite.html.includes('/hotel/invitacion/'+token));
+assert.ok(invite.html.includes('/invitacion/'+token));
 assert.ok(invite.text.includes('no se publicará'));
 assert.throws(()=>communicationTemplate({kind:'hotel_invitation',audience:'hotel',payload:{
  hotel_name:'Hotel',representative_name:'Eva',invitation_url:'https://evil.example/bad'
 }}),/INVALID_HOTEL_INVITE_URL/);
 const inviteMailjet=mailjetPayload(row,invite,'notificaciones@wakipe.com');
-assert.ok(inviteMailjet.Messages[0].HTMLPart.includes('/hotel/invitacion/'));
+assert.ok(inviteMailjet.Messages[0].HTMLPart.includes('https://hotel.wakipe.com/invitacion/'));
 console.log('Quick hotel invitation: branded Spanish HTML, escaped user data and fixed authenticated invite URL passed.');
+
+const legacyInvite=communicationTemplate({kind:'hotel_invitation',audience:'hotel',payload:{
+ hotel_name:'Hotel anterior',representative_name:'Operador',
+ invitation_url:'https://ventas.wakipe.com/hotel/invitacion/'+token
+}});
+assert.ok(legacyInvite.html.includes('https://ventas.wakipe.com/hotel/invitacion/'+token));
+console.log('Legacy invitation links remain supported for already queued Mailjet notices.');
