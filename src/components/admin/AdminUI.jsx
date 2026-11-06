@@ -1,15 +1,15 @@
 import { useEffect, useRef } from "react";
 import AdminSidebar from "./AdminSidebar";
-export function AdminPage({ title, subtitle, children, actions }) {
+export function AdminPage({ title, subtitle, children, actions, pageClassName = "" }) {
   return (
     <div className="hotel-setup-layout">
       <AdminSidebar />
-      <main className="control-main">
+      <main className={`control-main ${pageClassName}`.trim()}>
         <header className="control-header">
           <div>
             <span>WAKI · ADMINISTRACIÓN</span>
             <h1>{title}</h1>
-            <p>{subtitle}</p>
+            {subtitle && <p>{subtitle}</p>}
           </div>
           {actions && <div className="control-actions">{actions}</div>}
         </header>
