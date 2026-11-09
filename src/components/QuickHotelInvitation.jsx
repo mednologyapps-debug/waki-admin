@@ -90,7 +90,7 @@ export default function QuickHotelInvitationDialog({ onClose, onCreated }) {
           <h2 id="waki-quick-title">Invitación preparada</h2>
           <p>Registramos la invitación de <strong>{form.hotel.trim()}</strong> para <strong>{result.contact_email}</strong>.</p>
           <div className="waki-quick-modal__note">
-            WAKI solicitó el envío inmediato del correo mediante Mailjet. El responsable podrá registrar su acceso; el hotel no se publicará hasta su aprobación.
+            La invitación se envía automáticamente. El representante podrá abrir el enlace y completar el registro de su hotel.
           </div>
           <div className="waki-quick-modal__actions">
             <button type="button" className="waki-quick-secondary" onClick={copyInvitation}>

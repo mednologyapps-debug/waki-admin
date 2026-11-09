@@ -7,6 +7,7 @@ import HotelDossierVerification from './HotelDossierVerification';
 export default function CommissionApproval({hotelId,onClose,onApprove}){
  const [affiliation,setAffiliation]=useState(null);
  const [rate,setRate]=useState(null);
+ const [readiness,setReadiness]=useState(null);
  const [plan,setPlan]=useState('');
  const [dossierVerified,setDossierVerified]=useState(false);
  const [ready,setReady]=useState(false);
@@ -17,12 +18,14 @@ export default function CommissionApproval({hotelId,onClose,onApprove}){
   Promise.all([
    supabase.rpc('admin_finance_detail',{p_hotel:hotelId}),
    supabase.rpc('hotel_affiliation_control',{p_hotel:hotelId}),
-   supabase.rpc('admin_hotel_commercial_plan',{p_hotel:hotelId})
-  ]).then(([finance,review,commercial])=>{
+   supabase.rpc('admin_hotel_commercial_plan',{p_hotel:hotelId}),
+   supabase.rpc('get_hotel_onboarding_status',{target_hotel_id:hotelId})
+  ]).then(([finance,review,commercial,onboarding])=>{
    if(!active)return;
-   if(finance.error||review.error||commercial.error){setError('No se pudo cargar el acuerdo comercial. Actualiza y reintenta.');return;}
+   if(finance.error||review.error||commercial.error||onboarding.error){setError('No se pudo cargar el acuerdo comercial. Actualiza y reintenta.');return;}
    setRate(finance.data?.summary?.commission_rate??null);
    setAffiliation(review.data);setPlan(commercial.data?.plan?.code||'');
+   setReadiness(onboarding.data);
    setReady(true);
   }).catch(()=>{if(active)setError('No se pudo consultar la solicitud.');});
   return ()=>{active=false;};
@@ -35,7 +38,6 @@ export default function CommissionApproval({hotelId,onClose,onApprove}){
    const {error:e}=await supabase.rpc('admin_approve_hotel_affiliation',{
     p_hotel:hotelId,p_data:{
      plan_code:plan,plan_reason:'Plan aprobado al afiliar el hotel',
-     agreement_reference:form.get('agreement_reference'),
      bank_verified:dossierVerified,training_verified:form.get('training_verified')==='on'
     }
    });
@@ -43,12 +45,22 @@ export default function CommissionApproval({hotelId,onClose,onApprove}){
    await onApprove();
    onClose();
   }catch(e){
-   setError(e?.message?.includes('PLAN_REQUIRED')?'Selecciona el plan comercial para aprobar.'
-    :'No se pudo aprobar. Comprueba contrato, cuenta bancaria, capacitación y plan seleccionado.');
-  }finally{setBusy(false);}
+   const messages={
+    PLAN_REQUIRED:'Selecciona el plan comercial para aprobar.',
+    HOTEL_ACTIVE_UNIT_REQUIRED:'Falta una habitación física activa. El hotel debe agregarla en Habitaciones → Unidades.',
+    HOTEL_LOCATION_REQUIRED:'El hotel debe confirmar su ubicación en el mapa.',
+    HOTEL_ONBOARDING_INCOMPLETE:'Quedan datos del hotel, fotos o tarifas por completar.',
+    HOTEL_LEGAL_ACCEPTANCE_REQUIRED:'El representante aún debe aceptar los términos para hoteles.',
+    AFFILIATION_DOSSIER_INCOMPLETE:'Falta el contrato aceptado o la cuenta bancaria.',
+    AFFILIATION_REVIEW_REQUIRED:'Verifica el expediente y confirma la capacitación antes de aprobar.',
+    INVALID_REVIEW_STATUS:'El estado del hotel cambió. Actualiza la página y vuelve a abrir la revisión.'
+   };
+   const code=Object.keys(messages).find(key=>e?.message?.includes(key));
+   setError(messages[code]||'No pudimos aprobar el hotel. Actualiza la revisión y vuelve a intentarlo.');
+ }finally{setBusy(false);}
  }
  return <AdminDialog title="Aprobar hotel y asignar plan" onClose={onClose} busy={busy}>
-  <form className="control-form" onSubmit={approve}>
+  <form className="control-form hotel-approval-form" onSubmit={approve}>
    <Feedback error={error}/>
    {!ready?<p>Consultando solicitud, contrato y condiciones comerciales…</p>:<>
     <label>Plan comercial del hotel
@@ -60,19 +72,16 @@ export default function CommissionApproval({hotelId,onClose,onApprove}){
     {plan&&<p className="control-hint"><strong>{planTitle(plan)}</strong>: {plan==='socio'?'WAKI retiene 8 % por cada reserva y factura una cuota de S/99 por ciclo mensual desde la activación del hotel.':'WAKI retiene 12 % de cada reserva; no existe cuota fija.'} Las reservas presenciales solo bloquean inventario y no generan comisión.</p>}
     {rate!=null&&<p className="control-hint">Tasa anterior registrada: {rate} %. Las reservas ya cobradas conservan su comisión; el plan escogido regirá en las nuevas reservas.</p>}
     <p className="control-hint">Aceptación del hotel: <strong>{affiliation?.accepted?'Registrada':'Pendiente de aceptación por el representante'}</strong>.</p>
-    <label>Referencia del acuerdo comercial
-     <input name="agreement_reference" minLength="5" maxLength="160" required
-      defaultValue={affiliation?.review?.agreement_reference||''}
-      placeholder="Código o referencia del contrato aceptado"/>
-    </label>
+    {readiness?.active_unit_count === 0 && <Feedback error="Falta una habitación física activa. Pide al hotel que la agregue en Habitaciones → Unidades."/>}
+    {readiness?.active_unit_count > 0 && !readiness.is_ready && <Feedback error="Quedan datos del hotel, fotos o tarifas por completar."/>}
     <HotelDossierVerification hotelId={hotelId} onVerified={setDossierVerified}/>
-    {!dossierVerified&&<p className="control-hint" role="alert">Es obligatorio verificar contrato firmado y cuenta bancaria antes de aprobar.</p>}
+    {!dossierVerified&&<p className="control-hint" role="alert">Es obligatorio verificar el contrato y la cuenta bancaria antes de aprobar.</p>}
     <label className="control-check"><input name="training_verified" type="checkbox" required
       defaultChecked={Boolean(affiliation?.review?.training_verified)}/>
       Verifiqué la documentación y capacitación del hotel para gestionar reservas y bloqueos.</label>
     <label className="control-check"><input type="checkbox" required/>
       Confirmo que el plan seleccionado corresponde al contrato y que los importes de liquidación se calcularán según la tasa histórica de cada venta.</label>
-    <button className="control-btn primary" disabled={busy||!plan||!affiliation?.accepted||!dossierVerified}>
+    <button className="control-btn primary" disabled={busy||!plan||!affiliation?.accepted||!dossierVerified||!readiness?.is_ready}>
      {busy?'Aprobando…':'Aprobar hotel y activar plan'}
     </button>
    </>}
