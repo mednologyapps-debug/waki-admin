@@ -103,7 +103,9 @@ export default function QuickHotelInvitationDialog({ onClose, onCreated }) {
       ) : (
         <form onSubmit={handleCreate} className="waki-quick-modal__form">
           <h2 id="waki-quick-title">Agregar hotel</h2>
-          <p className="waki-quick-muted">Envía una invitación al responsable para que registre su establecimiento. Solo necesitamos tres datos.</p>
+          <p className="waki-quick-muted">
+            El representante recibirá un enlace para crear su acceso. Al abrirlo, completará la razón social, el RUC y el teléfono en WAKI Hotel.
+          </p>
           <label>Nombre del hotel
             <input type="text" value={form.hotel} maxLength={120} minLength={3} autoFocus required
               placeholder="Ej. Hotel Miraflores" onChange={e => setForm(s => ({ ...s, hotel: e.target.value }))} />
