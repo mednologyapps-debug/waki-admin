@@ -609,26 +609,23 @@ function HotelsPage() {
                 <p>
                   {hotels.length ===
                   0
-                    ? 'Crea el primer hotel de WAKI y configura su marca, sede, habitaciones y tarifas.'
+                    ? 'Invita al responsable del hotel para que cree su acceso y complete el registro en WAKI Hotel.'
                     : 'Prueba con otro filtro o término de búsqueda.'}
                 </p>
 
                 {hotels.length ===
                   0 && (
                   <button
+                    type="button"
                     className="hotels-empty-button"
-                    onClick={() =>
-                      navigate(
-                        '/hoteles/nuevo'
-                      )
-                    }
+                    onClick={() => setInviteOpen(true)}
                   >
                     <Icon
                       type="plus"
                       size={17}
                     />
 
-                    Agregar primer hotel
+                    Invitar primer hotel
                   </button>
                 )}
               </div>
