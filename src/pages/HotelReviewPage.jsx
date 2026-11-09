@@ -615,7 +615,7 @@ function HotelReviewPage() {
               }
             >
               {!rooms.some(room => room.room_units?.some(unit => unit.is_active)) && (
-                <p className="waki-review-notice">Falta una habitación física activa. El hotel puede registrarla en Habitaciones → Unidades de su portal.</p>
+                <p className="waki-review-notice">Falta una habitación física activa. El hotel puede registrarla en Habitaciones → Habitaciones físicas de su portal.</p>
               )}
               <div className="review-room-list">
 

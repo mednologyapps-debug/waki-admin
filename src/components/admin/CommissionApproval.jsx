@@ -47,7 +47,7 @@ export default function CommissionApproval({hotelId,onClose,onApprove}){
   }catch(e){
    const messages={
     PLAN_REQUIRED:'Selecciona el plan comercial para aprobar.',
-    HOTEL_ACTIVE_UNIT_REQUIRED:'Falta una habitación física activa. El hotel debe agregarla en Habitaciones → Unidades.',
+    HOTEL_ACTIVE_UNIT_REQUIRED:'Falta una habitación física activa. El hotel debe agregarla en Habitaciones → Habitaciones físicas.',
     HOTEL_LOCATION_REQUIRED:'El hotel debe confirmar su ubicación en el mapa.',
     HOTEL_ONBOARDING_INCOMPLETE:'Quedan datos del hotel, fotos o tarifas por completar.',
     HOTEL_LEGAL_ACCEPTANCE_REQUIRED:'El representante aún debe aceptar los términos para hoteles.',
@@ -72,7 +72,7 @@ export default function CommissionApproval({hotelId,onClose,onApprove}){
     {plan&&<p className="control-hint"><strong>{planTitle(plan)}</strong>: {plan==='socio'?'WAKI retiene 8 % por cada reserva y factura una cuota de S/99 por ciclo mensual desde la activación del hotel.':'WAKI retiene 12 % de cada reserva; no existe cuota fija.'} Las reservas presenciales solo bloquean inventario y no generan comisión.</p>}
     {rate!=null&&<p className="control-hint">Tasa anterior registrada: {rate} %. Las reservas ya cobradas conservan su comisión; el plan escogido regirá en las nuevas reservas.</p>}
     <p className="control-hint">Aceptación del hotel: <strong>{affiliation?.accepted?'Registrada':'Pendiente de aceptación por el representante'}</strong>.</p>
-    {readiness?.active_unit_count === 0 && <Feedback error="Falta una habitación física activa. Pide al hotel que la agregue en Habitaciones → Unidades."/>}
+    {readiness?.active_unit_count === 0 && <Feedback error="Falta una habitación física activa. Pide al hotel que la agregue en Habitaciones → Habitaciones físicas."/>}
     {readiness?.active_unit_count > 0 && !readiness.is_ready && <Feedback error="Quedan datos del hotel, fotos o tarifas por completar."/>}
     <HotelDossierVerification hotelId={hotelId} onVerified={setDossierVerified}/>
     {!dossierVerified&&<p className="control-hint" role="alert">Es obligatorio verificar el contrato y la cuenta bancaria antes de aprobar.</p>}
