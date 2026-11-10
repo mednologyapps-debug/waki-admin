@@ -146,6 +146,7 @@ function HotelReviewPage() {
             name,
             description,
             inventory_count,
+            room_units (id, is_active),
             max_guests,
             bed_type,
             size_m2,
@@ -258,7 +259,7 @@ function HotelReviewPage() {
       )
 
     const roomsComplete =
-      rooms.length > 0 &&
+      rooms.some(room => room.room_units?.some(unit => unit.is_active)) &&
       rooms.every(
         (room) =>
           room.name &&
@@ -439,14 +440,14 @@ function HotelReviewPage() {
       <AdminSidebar />
         {approvalOpen&&<CommissionApproval hotelId={hotelId} onClose={()=>setApprovalOpen(false)} onApprove={()=>navigate('/hoteles')}/>}
 
-      <main className="hotel-setup-main">
+      <main className="hotel-setup-main admin-hotel-review">
         <section className="hotel-brand-heading">
           <span>
-            Configuración / Paso 5
+            Afiliación del hotel
           </span>
 
           <h1>
-            Revisión
+            Revisión de afiliación
           </h1>
 
           <p>
@@ -468,7 +469,7 @@ function HotelReviewPage() {
           </div>
         </section>
 
-        <HotelDossierVerification hotelId={hotelId} />
+        <HotelDossierVerification hotelId={hotelId} allowPublish={!isApproved} />
 
         <div className="review-layout">
 
@@ -613,6 +614,9 @@ function HotelReviewPage() {
                 )
               }
             >
+              {!rooms.some(room => room.room_units?.some(unit => unit.is_active)) && (
+                <p className="waki-review-notice">Falta una habitación física activa. El hotel puede registrarla en Habitaciones → Habitaciones físicas de su portal.</p>
+              )}
               <div className="review-room-list">
 
                 {rooms.map(
