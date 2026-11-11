@@ -244,7 +244,6 @@ export default function FinancePage() {
       setBusy(false);
     }
   }
-  const s = data?.summary;
   const close = () => {
     if (!busy) setSelected(null);
   };
@@ -268,28 +267,6 @@ export default function FinancePage() {
       }
     >
       <Feedback error={error} notice={notice} />
-      <div className="control-metrics">
-        <Metric
-          label="Pendiente de depositar"
-          value={loading ? "…" : money(s?.pending)}
-          hint="Ventas conciliadas aún sin liquidar"
-        />
-        <Metric
-          label="Ya depositado"
-          value={loading ? "…" : money(s?.deposited)}
-          hint="Historial del período seleccionado"
-        />
-        <Metric
-          label="Comisión WAKI"
-          value={loading ? "…" : money(s?.commission)}
-          hint="Se respeta la tasa de cada venta"
-        />
-        <Metric
-          label="Hoteles pendientes"
-          value={loading ? "…" : (data?.counts?.pending ?? "—")}
-          hint="Revisa esta lista al volver mañana"
-        />
-      </div>
       <section className="control-card">
         <div className="control-section-head">
           <div>

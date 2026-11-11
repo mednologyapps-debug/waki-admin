@@ -73,18 +73,28 @@
 }
 .admin-canonical-sidebar nav a {
   width: 100%;
-  min-height: 46px;
-  padding: 0 12px;
+  min-height: 42px;
+  padding: 0 10px;
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   border-radius: 9px;
   background: transparent;
   color: #ffffffe8;
-  font: 500 12px/1.3 inherit;
+  font-family: inherit;
+  font-size: 12px !important;
+  font-weight: 500;
+  line-height: 1.2;
   text-decoration: none;
-  font-size: 12px;
+  white-space: nowrap;
+}
+.admin-canonical-sidebar nav a > span {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .admin-canonical-sidebar nav svg {
   flex-shrink: 0;
@@ -207,8 +217,8 @@ textarea {
     border: 0;
   }
   .admin-canonical-sidebar nav a {
-    min-height: 48px;
-    font-size: 13px;
+    min-height: 44px;
+    font-size: 13px !important;
   }
   .admin-canonical-bottom {
     margin-top: 60px;

@@ -1,6 +1,6 @@
 export const PLAN_OPTIONS = [
-  {code: "socio", title: "Socio WAKI", rate: 8, monthly: 99},
-  {code: "flexible", title: "Flexible", rate: 12, monthly: 0},
+  {code: "socio", title: "Socio WAKI", rate: 8, monthly: 99, tax: "más IGV"},
+  {code: "flexible", title: "Flexible", rate: 12, monthly: 0, tax: "más IGV"},
 ];
 export const planTitle = code => PLAN_OPTIONS.find(p => p.code === code)?.title || "Sin plan definido";
 export const nextCutoff = (today) => {

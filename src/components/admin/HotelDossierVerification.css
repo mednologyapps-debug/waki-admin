@@ -60,8 +60,21 @@
   font-weight: 650;
 }
 .waki-review-dossier__status[data-done="true"] { background: #e8f7ed; color: #226342; }
-.waki-review-dossier__publish :is(label, input) { max-width: 100%; font-size: 14px; }
+.waki-review-dossier__publish :is(label, input, select) { max-width: 100%; font-size: 14px; }
 .waki-review-dossier__publish label { display: grid; gap: 6px; }
+.waki-review-dossier__publish select {
+  min-width: min(320px, 100%);
+  border: 1px solid #ded7e9;
+  border-radius: 9px;
+  padding: 10px 12px;
+  background: #fff;
+  color: #30243d;
+  font: inherit;
+}
+.waki-review-dossier__contract-summary {
+  color: #615773;
+  font-size: 13px;
+}
 .waki-review-dossier__checks .control-check,
 .hotel-approval-form > .control-check { text-align: left; font-size: 14px; }
 .control-dialog:has(.hotel-approval-form) { width: min(740px, calc(100vw - 32px)); }

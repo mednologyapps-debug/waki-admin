@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, Copy, Mail, Send, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { PLAN_OPTIONS } from '../lib/commercialPlans'
 import './QuickHotelInvitation.css'
 
-const blank = { hotel: '', representative: '', email: '' }
+const blank = { hotel: '', representative: '', email: '', legalName: '', ruc: '', planCode: 'socio' }
 
 function errorMessage(error) {
   const code = String(error?.message || '')
@@ -11,6 +12,10 @@ function errorMessage(error) {
     INVALID_HOTEL_NAME: 'Ingresa el nombre completo del hotel (mínimo 3 caracteres).',
     INVALID_REPRESENTATIVE: 'Ingresa el nombre de la persona responsable.',
     INVALID_CONTACT_EMAIL: 'Ingresa un correo electrónico válido.',
+    INVALID_LEGAL_NAME: 'Ingresa la razón social del hotel.',
+    INVALID_RUC: 'El RUC debe tener 11 dígitos.',
+    INVALID_PLAN: 'Selecciona un plan comercial.',
+    RUC_ALREADY_REGISTERED: 'Ese RUC ya está registrado en WAKI.',
     INVITE_ALREADY_PENDING: 'Este hotel ya tiene una invitación activa para ese correo. Revisa las invitaciones recientes.',
     HOTEL_ALREADY_REGISTERED: 'Este hotel ya se encuentra registrado con ese correo.',
     DAILY_INVITE_LIMIT_REACHED: 'Alcanzaste el límite de invitaciones del día.',
@@ -49,7 +54,10 @@ export default function QuickHotelInvitationDialog({ onClose, onCreated }) {
       const { data, error: requestError } = await supabase.rpc('create_quick_hotel_invitation', {
         p_hotel_name: form.hotel.trim(),
         p_representative_name: form.representative.trim(),
-        p_email: form.email.trim().toLowerCase()
+        p_email: form.email.trim().toLowerCase(),
+        p_legal_name: form.legalName.trim(),
+        p_ruc: form.ruc.replace(/\D/g, ''),
+        p_plan_code: form.planCode
       })
       if (requestError) throw requestError
       if (!data?.id) throw new Error('MISSING_INVITE')
@@ -89,6 +97,7 @@ export default function QuickHotelInvitationDialog({ onClose, onCreated }) {
           <div className="waki-quick-modal__success-icon"><Check size={24} /></div>
           <h2 id="waki-quick-title">Invitación preparada</h2>
           <p>Registramos la invitación de <strong>{form.hotel.trim()}</strong> para <strong>{result.contact_email}</strong>.</p>
+          <p>Razón social: <strong>{form.legalName.trim()}</strong> · RUC <strong>{form.ruc}</strong> · Plan <strong>{PLAN_OPTIONS.find(p => p.code === form.planCode)?.title}</strong>.</p>
           <div className="waki-quick-modal__note">
             La invitación se envía automáticamente. El representante podrá abrir el enlace y completar el registro de su hotel.
           </div>
@@ -104,7 +113,7 @@ export default function QuickHotelInvitationDialog({ onClose, onCreated }) {
         <form onSubmit={handleCreate} className="waki-quick-modal__form">
           <h2 id="waki-quick-title">Agregar hotel</h2>
           <p className="waki-quick-muted">
-            El representante recibirá un enlace para crear su acceso. Al abrirlo, completará la razón social, el RUC y el teléfono en WAKI Hotel.
+            Define los datos legales y el plan que aparecerán en el contrato. El representante recibirá un enlace para crear su acceso y confirmar el teléfono en WAKI Hotel.
           </p>
           <label>Nombre del hotel
             <input type="text" value={form.hotel} maxLength={120} minLength={3} autoFocus required
@@ -113,6 +122,21 @@ export default function QuickHotelInvitationDialog({ onClose, onCreated }) {
           <label>Nombre del representante
             <input type="text" value={form.representative} maxLength={120} minLength={2} required
               placeholder="Nombre y apellido" onChange={e => setForm(s => ({ ...s, representative: e.target.value }))} />
+          </label>
+          <label>Razón social
+            <input type="text" value={form.legalName} maxLength={160} minLength={3} required
+              placeholder="Razón social registrada en SUNAT" onChange={e => setForm(s => ({ ...s, legalName: e.target.value }))} />
+          </label>
+          <label>RUC
+            <input type="text" inputMode="numeric" value={form.ruc} maxLength={11} minLength={11} required
+              placeholder="11 dígitos" onChange={e => setForm(s => ({ ...s, ruc: e.target.value.replace(/\D/g, '').slice(0, 11) }))} />
+          </label>
+          <label>Plan comercial
+            <select value={form.planCode} onChange={e => setForm(s => ({ ...s, planCode: e.target.value }))} required>
+              {PLAN_OPTIONS.map(plan => <option key={plan.code} value={plan.code}>
+                {plan.title} · {plan.rate}% + IGV{plan.monthly ? ' · S/99 + IGV al mes' : ' · sin cuota mensual'}
+              </option>)}
+            </select>
           </label>
           <label>Correo del hotel
             <input type="email" value={form.email} maxLength={254} required autoComplete="email"

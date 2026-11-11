@@ -72,7 +72,7 @@ export default function DashboardPage() {
         <section className="control-card">
           <h2>Finanzas con control</h2>
           <p>
-            Revisa los planes 8% + S/99 o 12% sin cuota, concilia
+            Revisa los planes 8 % + IGV y S/ 99 + IGV o 12 % + IGV sin cuota, concilia
             cobros y registra depósitos con trazabilidad.
           </p>
           <Link to="/cortes">Revisar cortes y mensualidades</Link>

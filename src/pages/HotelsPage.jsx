@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 import AdminSidebar from '../components/admin/AdminSidebar'
-import QuickHotelInvitationDialog, { QuickHotelInvitationList } from '../components/QuickHotelInvitation'
+import QuickHotelInvitationDialog from '../components/QuickHotelInvitation'
 
 function Icon({
   type,
@@ -96,7 +96,6 @@ function HotelsPage() {
   const [activeFilter, setActiveFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [inviteOpen, setInviteOpen] = useState(false)
-  const [invitesVersion, setInvitesVersion] = useState(0)
 
   useEffect(() => {
     let mounted = true
@@ -384,11 +383,8 @@ function HotelsPage() {
         {inviteOpen && (
           <QuickHotelInvitationDialog
             onClose={() => setInviteOpen(false)}
-            onCreated={() => setInvitesVersion(v => v + 1)}
           />
         )}
-
-        <QuickHotelInvitationList refreshKey={invitesVersion} />
 
         {/* =========================
             RESUMEN

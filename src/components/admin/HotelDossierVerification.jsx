@@ -2,11 +2,14 @@ import { useEffect, useState } from 'react'
 import { Building2, FileText, ShieldCheck } from 'lucide-react'
 import './HotelDossierVerification.css'
 import { supabase } from '../../lib/supabase'
+import { PLAN_OPTIONS, planTitle } from '../../lib/commercialPlans'
+import { buildHotelAffiliationContract } from '../../lib/hotelAffiliationContract'
 
 export default function HotelDossierVerification({ hotelId, onVerified, allowVerify = true, allowPublish = false }) {
   const [dossier, setDossier] = useState(null)
   const [offer, setOffer] = useState(null)
-  const [file, setFile] = useState(null)
+  const [hotel, setHotel] = useState(null)
+  const [planCode, setPlanCode] = useState('')
   const [showAccount, setShowAccount] = useState(false)
   const [contractChecked, setContractChecked] = useState(false)
   const [bankChecked, setBankChecked] = useState(false)
@@ -16,9 +19,11 @@ export default function HotelDossierVerification({ hotelId, onVerified, allowVer
 
   async function load() {
     if (!hotelId) return
-    const [{ data, error: issue }, contract] = await Promise.all([
+    const [{ data, error: issue }, contract, hotelResult, planResult] = await Promise.all([
       supabase.rpc('hotel_dossier_control', { p_hotel: hotelId }),
-      supabase.rpc('hotel_contract_offer', { p_hotel: hotelId })
+      supabase.rpc('hotel_contract_offer', { p_hotel: hotelId }),
+      supabase.from('hotels').select('id,name,address,contact_email,hotel_brands(commercial_name,legal_name,ruc)').eq('id', hotelId).single(),
+      supabase.rpc('admin_hotel_commercial_plan', { p_hotel: hotelId })
     ])
     if (issue) {
       setError('No fue posible consultar el expediente privado.')
@@ -28,6 +33,10 @@ export default function HotelDossierVerification({ hotelId, onVerified, allowVer
     setDossier(data)
     setOffer(contract.data)
     if (contract.error) setError('No se pudo consultar el contrato publicado.')
+    if (hotelResult.error) setError('No se pudieron consultar los datos legales del hotel.')
+    else setHotel(hotelResult.data)
+    if (planResult.error) setError('No se pudo consultar el plan comercial.')
+    else setPlanCode(planResult.data?.plan?.code || '')
     onVerified?.(Boolean(data?.contract_verified && data?.bank_verified))
   }
   useEffect(() => {
@@ -51,13 +60,21 @@ export default function HotelDossierVerification({ hotelId, onVerified, allowVer
   }
 
   async function publish() {
-    if (busy || !file) return
-    if (file.type !== 'application/pdf' || file.size === 0 || file.size > 10 * 1024 * 1024) {
-      setError('Selecciona un PDF de hasta 10 MB.')
-      return
-    }
+    if (busy || !planCode || !hotel) return
     setBusy(true); setError(''); setSuccess('')
     try {
+      const { data: currentPlan, error: planError } = await supabase.rpc('admin_hotel_commercial_plan', { p_hotel: hotelId })
+      if (planError) throw planError
+      if (currentPlan?.plan?.code !== planCode) {
+        const { error: assignError } = await supabase.rpc('admin_hotel_commercial_plan', {
+          p_hotel: hotelId,
+          p_action: 'assign',
+          p_data: { code: planCode, reason: 'Plan definido para la oferta contractual del hotel' }
+        })
+        if (assignError) throw assignError
+      }
+      const pdfBytes = await buildHotelAffiliationContract({ hotel, planCode, representativeEmail: hotel.contact_email })
+      const file = new File([pdfBytes], `contrato-afiliacion-${hotel.name}.pdf`, { type: 'application/pdf' })
       const path = hotelId + '/contracts/' + crypto.randomUUID() + '.pdf'
       const { error: uploadIssue } = await supabase.storage.from('hotel-affiliations')
         .upload(path, file, { contentType: 'application/pdf', upsert: false, cacheControl: '0' })
@@ -66,13 +83,18 @@ export default function HotelDossierVerification({ hotelId, onVerified, allowVer
         p_hotel: hotelId, p_action: 'publish', p_path: path
       })
       if (issue) throw issue
-      setFile(null); setContractChecked(false)
+      setContractChecked(false)
       await load()
       setSuccess('PDF disponible en WAKI Hotel para la aceptación del representante.')
     } catch (issue) {
-      setError(issue?.message === 'CONTRACT_ALREADY_ACCEPTED'
-        ? 'El representante ya aceptó el contrato publicado.'
-        : 'No se pudo publicar el contrato. Revisa el archivo y el estado del hotel.')
+      const known = {
+        CONTRACT_ALREADY_ACCEPTED: 'El representante ya aceptó el contrato publicado.',
+        HOTEL_PLAN_REQUIRED: 'Selecciona un plan comercial antes de generar el contrato.',
+        HOTEL_LEGAL_DETAILS_REQUIRED: 'Completa la razón social y el RUC de 11 dígitos antes de generar el contrato.',
+        CHANGE_REASON_REQUIRED: 'No fue posible guardar el cambio de plan. Revisa el motivo requerido.'
+      }
+      const code = Object.keys(known).find(key => issue?.message?.includes(key))
+      setError(known[code] || 'No se pudo generar y publicar el contrato. Comprueba el plan, los datos legales y el estado del hotel.')
     } finally { setBusy(false) }
   }
 
@@ -113,11 +135,17 @@ export default function HotelDossierVerification({ hotelId, onVerified, allowVer
               {documentPath && <button type="button" className="control-btn secondary" onClick={() => void openDocument(documentPath)}>Abrir PDF privado</button>}
               {allowPublish && !offer?.accepted_at && !dossier.contract_ready && (
                 <div className="waki-review-dossier__publish">
-                  <label>PDF de WAKI
-                    <input key={offer?.document_path || 'new'} type="file" accept="application/pdf,.pdf" disabled={busy} onChange={e => setFile(e.target.files?.[0] || null)}/>
+                  <label>Plan que irá en el contrato
+                    <select value={planCode} onChange={e => setPlanCode(e.target.value)} disabled={busy}>
+                      <option value="">Selecciona el plan</option>
+                      {PLAN_OPTIONS.map(plan => <option key={plan.code} value={plan.code}>{plan.title} · {plan.rate}% + IGV{plan.monthly ? ' · S/99 + IGV al mes' : ' · sin cuota mensual'}</option>)}
+                    </select>
                   </label>
-                  <button type="button" className="control-btn primary" disabled={!file || busy} onClick={() => void publish()}>
-                    {busy ? 'Guardando…' : 'Publicar para aceptación'}
+                  {planCode && <p className="waki-review-dossier__contract-summary">
+                    {planTitle(planCode)}: {planCode === 'socio' ? '8 % + IGV por reserva y S/ 99 + IGV al mes.' : '12 % + IGV por reserva y sin cuota mensual.'}
+                  </p>}
+                  <button type="button" className="control-btn primary" disabled={!planCode || !hotel || busy} onClick={() => void publish()}>
+                    {busy ? 'Generando PDF…' : offer?.document_path ? 'Regenerar contrato' : 'Generar y publicar contrato'}
                   </button>
                 </div>
               )}

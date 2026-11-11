@@ -66,10 +66,10 @@ export default function CommissionApproval({hotelId,onClose,onApprove}){
     <label>Plan comercial del hotel
      <select value={plan} onChange={e=>setPlan(e.target.value)} required>
       <option value="">Selecciona el plan acordado</option>
-      {PLAN_OPTIONS.map(p=><option key={p.code} value={p.code}>{p.title} · {p.rate}% {p.monthly?'+ S/99 al mes':'sin cuota mensual'}</option>)}
+      {PLAN_OPTIONS.map(p=><option key={p.code} value={p.code}>{p.title} · {p.rate}% + IGV {p.monthly?'+ S/99 + IGV al mes':'sin cuota mensual'}</option>)}
      </select>
     </label>
-    {plan&&<p className="control-hint"><strong>{planTitle(plan)}</strong>: {plan==='socio'?'WAKI retiene 8 % por cada reserva y factura una cuota de S/99 por ciclo mensual desde la activación del hotel.':'WAKI retiene 12 % de cada reserva; no existe cuota fija.'} Las reservas presenciales solo bloquean inventario y no generan comisión.</p>}
+    {plan&&<p className="control-hint"><strong>{planTitle(plan)}</strong>: {plan==='socio'?'8 % de comisión más IGV y S/99 más IGV por ciclo mensual desde la activación del hotel.':'12 % de comisión más IGV, sin cuota mensual.'} Las reservas presenciales solo bloquean inventario y no generan comisión.</p>}
     {rate!=null&&<p className="control-hint">Tasa anterior registrada: {rate} %. Las reservas ya cobradas conservan su comisión; el plan escogido regirá en las nuevas reservas.</p>}
     <p className="control-hint">Aceptación del hotel: <strong>{affiliation?.accepted?'Registrada':'Pendiente de aceptación por el representante'}</strong>.</p>
     {readiness?.active_unit_count === 0 && <Feedback error="Falta una habitación física activa. Pide al hotel que la agregue en Habitaciones → Habitaciones físicas."/>}

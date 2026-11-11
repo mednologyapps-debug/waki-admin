@@ -61,7 +61,7 @@ export default function SettingsPage() {
       <section className="control-card">
         <h2>Comisión de WAKI</h2>
         <p>
-          La comisión se administra desde el acuerdo comercial del hotel: 8% + S/99 mensuales o 12% sin cuota. Las operaciones históricas mantienen su porcentaje.
+          La comisión se administra desde el acuerdo comercial del hotel: 8 % + IGV y S/ 99 + IGV al mes, o 12 % + IGV sin cuota. Las operaciones históricas mantienen su porcentaje.
         </p>
         <div className="control-table-wrap">
           <table>

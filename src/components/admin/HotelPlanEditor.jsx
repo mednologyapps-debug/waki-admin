@@ -97,8 +97,8 @@ export default function HotelPlanEditor({hotelId,compact=false,onUpdated}) {
         <>
           <div className="waki-plan-stats">
             <article><span>Plan actual</span><strong>{planTitle(plan?.code)}</strong></article>
-            <article><span>Comisión de nuevas reservas</span><strong>{plan?plan.commission_rate+' %':data?.legacy_rate==null?'—':data.legacy_rate+' % (histórica)'}</strong></article>
-            <article><span>Cuota mensual</span><strong>{money(plan?.monthly_fee||0)}</strong></article>
+            <article><span>Comisión de nuevas reservas</span><strong>{plan?plan.commission_rate+' % + IGV':data?.legacy_rate==null?'—':data.legacy_rate+' % (histórica)'}</strong></article>
+            <article><span>Cuota mensual</span><strong>{plan?.monthly_fee ? `${money(plan.monthly_fee)} + IGV` : money(0)}</strong></article>
             <article><span>Mensualidades por cobrar</span><strong>{money(totalDue)}</strong></article>
           </div>
           {!plan&&<p className="waki-plan-warning">Este hotel aún no tiene asignado uno de los nuevos planes. Las ventas antiguas conservan su tasa.</p>}
@@ -107,7 +107,7 @@ export default function HotelPlanEditor({hotelId,compact=false,onUpdated}) {
             <label>Plan del hotel
               <select value={choice} onChange={e=>setChoice(e.target.value)} required>
                 <option value="">Selecciona un plan</option>
-                {PLAN_OPTIONS.map(p=><option key={p.code} value={p.code}>{p.title} · {p.rate}% {p.monthly?'+ S/99 mensual':'sin mensualidad'}</option>)}
+                {PLAN_OPTIONS.map(p=><option key={p.code} value={p.code}>{p.title} · {p.rate}% + IGV {p.monthly?'+ S/99 + IGV mensual':'sin mensualidad'}</option>)}
               </select>
             </label>
             {plan?.code!==choice&&plan&&<label>Motivo del cambio
